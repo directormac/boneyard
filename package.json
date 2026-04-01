@@ -1,8 +1,7 @@
 {
   "name": "boneyard-monorepo",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ]
+  "pnpm": {
+    "onlyBuiltDependencies": ["canvas", "sharp"]
+  }
 }

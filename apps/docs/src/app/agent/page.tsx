@@ -29,7 +29,7 @@ import './bones/registry'
 
 \`\`\`tsx
 // app/blog/page.tsx — no per-file JSON import needed
-import { Skeleton } from 'boneyard/react'
+import { Skeleton } from '@0xgf/boneyard/react'
 
 function BlogPage() {
   const { data, isLoading } = useFetch('/api/post')
@@ -110,15 +110,15 @@ Each bone is \`{ x, y, w, h, r, c? }\` — pixel offsets from the container's to
 ## Low-level API (non-React)
 
 \`\`\`ts
-import { snapshotBones } from 'boneyard'
+import { snapshotBones } from '@0xgf/boneyard'
 const result = snapshotBones(document.querySelector('.card'))
 
-import { renderBones } from 'boneyard'
+import { renderBones } from '@0xgf/boneyard'
 const html = renderBones(result, '#d4d4d4')
 container.innerHTML = html
 
 // Manual bone registration (what the generated registry.js does automatically)
-import { registerBones } from 'boneyard'
+import { registerBones } from '@0xgf/boneyard'
 registerBones('my-card', bonesJson)
 \`\`\`
 

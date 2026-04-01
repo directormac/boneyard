@@ -15,7 +15,7 @@ npm install boneyard
 ## Quick start (React)
 
 \`\`\`tsx
-import { Skeleton } from 'boneyard/react'
+import { Skeleton } from '@0xgf/boneyard/react'
 
 const DEFAULT_POST = { title: 'Loading...', body: '...' }
 
@@ -47,7 +47,7 @@ For non-React or advanced usage, boneyard exposes three functions:
 ### 1. fromElement(el) — Extract
 
 \`\`\`ts
-import { fromElement } from 'boneyard'
+import { fromElement } from '@0xgf/boneyard'
 
 const descriptor = fromElement(document.querySelector('.card'))
 // → plain JSON SkeletonDescriptor, ~200 bytes for a card component
@@ -59,7 +59,7 @@ Walks the subtree and captures: display, flex direction, gap, padding, dimension
 ### 2. computeLayout(descriptor, width) — Compute
 
 \`\`\`ts
-import { computeLayout } from 'boneyard/layout'
+import { computeLayout } from '@0xgf/boneyard/layout'
 
 const skeleton = computeLayout(descriptor, 320)
 // → { name, viewportWidth, width, height, bones: Bone[] }
@@ -70,7 +70,7 @@ Pure layout math — no DOM, no browser needed. Works in SSR, Web Workers, React
 ### 3. renderBones(skeleton) — Render
 
 \`\`\`ts
-import { renderBones } from 'boneyard'
+import { renderBones } from '@0xgf/boneyard'
 
 container.innerHTML = renderBones(skeleton)
 // Each bone → absolutely positioned div with shimmer animation
@@ -79,7 +79,7 @@ container.innerHTML = renderBones(skeleton)
 ### All-in-one shortcut
 
 \`\`\`ts
-import { skeleton } from 'boneyard'
+import { skeleton } from '@0xgf/boneyard'
 
 container.innerHTML = skeleton(element)
 // extract + compute + render in one call

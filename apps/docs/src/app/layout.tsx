@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Sidebar } from "@/components/sidebar";
-import { PageSkeletonWrapper } from "@/components/page-skeleton-wrapper";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -34,9 +34,7 @@ export default function RootLayout({
         <div className="mx-auto max-w-[1080px] flex h-screen px-3 py-3">
           <Sidebar />
           <main className="flex-1 min-w-0 overflow-y-auto" style={{ scrollbarGutter: 'stable' }}>
-            <PageSkeletonWrapper>
-              {children}
-            </PageSkeletonWrapper>
+            {children}
           </main>
         </div>
       </body>

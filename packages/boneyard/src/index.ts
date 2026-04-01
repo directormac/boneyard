@@ -15,7 +15,7 @@ export type { Bone, SkeletonResult, ResponsiveBones, SkeletonDescriptor, Respons
  *
  * @example In a browser console or dev script:
  * ```ts
- * import { snapshotBones } from 'boneyard'
+ * import { snapshotBones } from '@0xgf/boneyard'
  * const bones = snapshotBones(document.querySelector('.my-card'))
  * console.log(JSON.stringify(bones, null, 2))
  * // → paste into my-card.bones.json
@@ -55,7 +55,7 @@ export { renderBones } from './runtime.js'
  *
  *   container.innerHTML = skeleton(element)
  *
- * For React, prefer `<Skeleton>` from 'boneyard/react' — it calls
+ * For React, prefer `<Skeleton>` from '@0xgf/boneyard/react' — it calls
  * `snapshotBones()` directly and handles caching automatically.
  */
 export function skeleton(

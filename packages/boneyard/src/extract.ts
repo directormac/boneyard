@@ -14,7 +14,7 @@ export function snapshotBones(el: Element, name: string = 'component', config?: 
   const rootRect = el.getBoundingClientRect()
   const bones: Bone[] = []
 
-  const leafTags = config?.leafTags ? new Set(config.leafTags) : DEFAULT_LEAF_TAGS
+  const leafTags = config?.leafTags ? new Set([...DEFAULT_LEAF_TAGS, ...config.leafTags]) : DEFAULT_LEAF_TAGS
   const captureRoundedBorders = config?.captureRoundedBorders ?? true
   const excludeTags = config?.excludeTags ? new Set(config.excludeTags) : null
   const excludeSelectors = config?.excludeSelectors ?? null
@@ -49,16 +49,18 @@ export function snapshotBones(el: Element, name: string = 'component', config?: 
     const hasBorderRadius = (parseFloat(style.borderTopLeftRadius) || 0) > 0
     const hasVisualSurface = hasBg || hasBgImage || (hasBorder && hasBorderRadius)
 
+    const isTableNode = tag === 'tr' || tag === 'td' || tag === 'th' || tag === 'thead' || tag === 'tbody' || tag === 'table'
+
     if (isLeaf) {
       const rect = node.getBoundingClientRect()
       if (rect.width < 1 || rect.height < 1) return
-      const br = parseBorderRadius(style, node)
+      const br = isTableNode ? 0 : (parseBorderRadius(style, node) ?? 8)
       bones.push({
         x: Math.round(rect.left - rootRect.left),
         y: Math.round(rect.top - rootRect.top),
         w: Math.round(rect.width),
         h: Math.round(rect.height),
-        r: br ?? 8,
+        r: br,
       })
       return
     }
@@ -68,13 +70,13 @@ export function snapshotBones(el: Element, name: string = 'component', config?: 
     if (hasVisualSurface) {
       const rect = node.getBoundingClientRect()
       if (rect.width >= 1 && rect.height >= 1) {
-        const br = parseBorderRadius(style, node)
+        const br = isTableNode ? 0 : (parseBorderRadius(style, node) ?? 8)
         bones.push({
           x: Math.round(rect.left - rootRect.left),
           y: Math.round(rect.top - rootRect.top),
           w: Math.round(rect.width),
           h: Math.round(rect.height),
-          r: br ?? 8,
+          r: br,
           c: true, // container bone — rendered at reduced opacity
         })
       }
@@ -143,9 +145,13 @@ function extractNode(el: Element): SkeletonDescriptor {
   const mar = extractSides(style, 'margin')
   if (mar) desc.margin = mar
 
-  // Border radius
-  const br = parseBorderRadius(style, el)
-  if (br !== undefined) desc.borderRadius = br
+  // Border radius (skip table elements — they inherit from overflow:hidden parents)
+  const elTag = el.tagName.toLowerCase()
+  const isTableEl = elTag === 'tr' || elTag === 'td' || elTag === 'th' || elTag === 'thead' || elTag === 'tbody' || elTag === 'table'
+  if (!isTableEl) {
+    const br = parseBorderRadius(style, el)
+    if (br !== undefined) desc.borderRadius = br
+  }
 
   // Max width
   const maxW = parseFloat(style.maxWidth)
@@ -362,9 +368,13 @@ function snapshotAsLeaf(el: Element, style: CSSStyleDeclaration, desc: SkeletonD
   desc.width = Math.round(rect.width)
   desc.height = Math.round(rect.height)
 
-  // Border radius
-  const br = parseBorderRadius(style, el)
-  if (br !== undefined) desc.borderRadius = br
+  // Border radius (skip table elements)
+  const leafTag = el.tagName.toLowerCase()
+  const isTableLeaf = leafTag === 'tr' || leafTag === 'td' || leafTag === 'th' || leafTag === 'thead' || leafTag === 'tbody' || leafTag === 'table'
+  if (!isTableLeaf) {
+    const br = parseBorderRadius(style, el)
+    if (br !== undefined) desc.borderRadius = br
+  }
 
   // If it has children, try to extract them — we just fix this node's own dimensions
   // so the layout engine treats it as a fixed-size container

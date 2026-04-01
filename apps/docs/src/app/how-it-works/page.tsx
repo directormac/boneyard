@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import type { SkeletonDescriptor } from "boneyard";
-import { computeLayout } from "boneyard/layout";
+import type { SkeletonDescriptor } from "@0xgf/boneyard";
+import { computeLayout } from "@0xgf/boneyard/layout";
 import { BrowserMockup } from "@/components/browser-mockup";
+
 
 // ── The example card used across all 3 steps ──
 
@@ -156,9 +157,8 @@ export default function HowItWorksPage() {
           <span>Under the hood</span>
         </div>
         <p className="text-[14px] text-[#78716c] leading-relaxed mt-4 mb-6">
-          When you wrap a component with{" "}
-          <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">&lt;Skeleton&gt;</code>,
-          three things happen automatically &mdash; no placeholder data needed:
+          Boneyard generates skeletons at build time &mdash; not at runtime.
+          Here&apos;s the three-step flow:
         </p>
 
         <div className="space-y-8">
@@ -166,8 +166,8 @@ export default function HowItWorksPage() {
           <div>
             <h3 className="text-[15px] font-semibold mb-2">1. Wrap</h3>
             <p className="text-[14px] text-[#78716c] leading-relaxed mb-3">
-              You wrap your component with{" "}
-              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">&lt;Skeleton loading=&#123;isLoading&#125;&gt;</code>.
+              Wrap your component with{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">&lt;Skeleton name=&quot;blog-card&quot; loading=&#123;isLoading&#125;&gt;</code>.
               When <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">loading</code> is
               false, your children render normally.
             </p>
@@ -178,13 +178,20 @@ export default function HowItWorksPage() {
 
           {/* Step 2 */}
           <div>
-            <h3 className="text-[15px] font-semibold mb-2">2. Snapshot</h3>
+            <h3 className="text-[15px] font-semibold mb-2">2. Build</h3>
             <p className="text-[14px] text-[#78716c] leading-relaxed mb-3">
-              After your content paints, boneyard calls{" "}
-              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">snapshotBones</code>{" "}
-              on the rendered DOM. It walks the subtree and reads the exact pixel position,
-              size, and border radius of every visible element. This produces a flat array of bones
-              and writes them to a JSON file.
+              Run{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">npx boneyard build</code>.
+              This launches a headless browser via Playwright, visits your running app at
+              multiple breakpoints, and calls{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">getBoundingClientRect()</code>{" "}
+              on every visible element inside each named{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">&lt;Skeleton&gt;</code>.
+              The exact pixel positions, sizes, and border radii are written to{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">.bones.json</code>{" "}
+              files and a{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">registry.js</code>{" "}
+              that maps each skeleton name to its bones.
             </p>
             <BrowserMockup url="localhost:3000">
               <ExampleCard showScanOverlay />
@@ -193,12 +200,14 @@ export default function HowItWorksPage() {
 
           {/* Step 3 */}
           <div>
-            <h3 className="text-[15px] font-semibold mb-2">3. Replay</h3>
+            <h3 className="text-[15px] font-semibold mb-2">3. Render</h3>
             <p className="text-[14px] text-[#78716c] leading-relaxed mb-3">
-              Next time <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">loading</code> becomes
-              true, boneyard renders those bones as gray rectangles overlaid on the hidden component —
-              each one an absolutely positioned div matching the exact position from the real layout.
-              When loading becomes false, your children replace the skeleton with zero layout shift.
+              Import the generated registry once in your app entry. When{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">loading</code>{" "}
+              is true, boneyard looks up the pre-generated bones by name and renders them as
+              gray rectangles &mdash; each one an absolutely positioned div matching the exact
+              position from the real layout. When loading becomes false, your children
+              replace the skeleton with zero layout shift.
             </p>
             <BrowserMockup url="localhost:3000">
               <SkeletonCard />

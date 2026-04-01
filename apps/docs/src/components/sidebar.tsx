@@ -18,6 +18,7 @@ const navItems = [
 ];
 
 const exampleItems = [
+  { href: "/demo", label: "Complex Example" },
   { href: "/playground", label: "Playground" },
   { href: "/try-it", label: "Examples" },
   { href: "/how-it-works", label: "How it works" },
@@ -26,7 +27,7 @@ const exampleItems = [
 
 const externalLinks = [
   { href: "https://github.com/0xGF/boneyard", label: "GitHub" },
-  { href: "https://www.npmjs.com/package/boneyard", label: "npm" },
+  { href: "https://www.npmjs.com/package/@0xgf/boneyard", label: "npm" },
 ];
 
 export function Sidebar() {
@@ -91,17 +92,6 @@ export function Sidebar() {
           ))}
         </ul>
       </nav>
-
-      {/* Skeleton preview */}
-      <div className="pb-4">
-        <button
-          onClick={() => window.dispatchEvent(new Event('boneyard:preview'))}
-          className="flex items-center gap-2 py-1.5 text-[13px] text-[#a8a29e] hover:text-[#78716c] transition-colors group"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-stone-300 group-hover:bg-stone-400 transition-colors" />
-          Preview skeleton
-        </button>
-      </div>
 
       {/* Footer */}
       <div className="py-4 space-y-1.5">

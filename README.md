@@ -9,7 +9,7 @@ Pixel-perfect skeleton loading screens, extracted from your real DOM. No manual 
 3. Import the registry once — every skeleton auto-resolves
 
 ```tsx
-import { Skeleton } from 'boneyard/react'
+import { Skeleton } from '@0xgf/boneyard/react'
 
 function BlogPage() {
   const { data, isLoading } = useFetch('/api/post')
@@ -36,7 +36,7 @@ Done. Every `<Skeleton name="...">` shows a pixel-perfect skeleton on load.
 ## Install
 
 ```bash
-npm install boneyard
+npm install @0xgf/boneyard
 ```
 
 ## What it does
@@ -67,7 +67,7 @@ npx boneyard build --breakpoints 390,820,1440 --out ./public/bones
 
 ## Links
 
-- [npm](https://www.npmjs.com/package/boneyard)
+- [npm](https://www.npmjs.com/package/@0xgf/boneyard)
 - [Documentation](https://github.com/0xGF/boneyard)
 
 ## License

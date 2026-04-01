@@ -3,9 +3,6 @@ import { snapshotBones } from './extract.js'
 import type { Bone, SkeletonResult, ResponsiveBones, SnapshotConfig } from './types.js'
 
 // ── Bones registry ──────────────────────────────────────────────────────────
-// Module-level registry populated by registerBones() from the generated registry file.
-// This lets <Skeleton name="x"> auto-resolve bones without an explicit initialBones prop.
-
 const bonesRegistry = new Map<string, SkeletonResult | ResponsiveBones>()
 
 /**
@@ -17,14 +14,16 @@ const bonesRegistry = new Map<string, SkeletonResult | ResponsiveBones>()
  * ```ts
  * import './bones/registry'
  * ```
- *
- * Then every `<Skeleton name="blog-card">` automatically gets its bones — no
- * `initialBones` prop needed.
  */
 export function registerBones(map: Record<string, SkeletonResult | ResponsiveBones>): void {
   for (const [name, bones] of Object.entries(map)) {
     bonesRegistry.set(name, bones)
   }
+}
+
+// ── Expose snapshotBones for CLI build mode (module-level, no useEffect) ────
+if (typeof window !== 'undefined' && (window as any).__BONEYARD_BUILD) {
+  (window as any).__BONEYARD_SNAPSHOT = snapshotBones
 }
 
 /** Pick the right SkeletonResult from a responsive set for the current width */
@@ -35,7 +34,6 @@ function resolveResponsive(
   if (!('breakpoints' in bones)) return bones
   const bps = Object.keys(bones.breakpoints).map(Number).sort((a, b) => a - b)
   if (bps.length === 0) return null
-  // Largest breakpoint that fits (same logic as CSS min-width media queries)
   const match = [...bps].reverse().find(bp => width >= bp) ?? bps[0]
   return bones.breakpoints[match] ?? null
 }
@@ -52,38 +50,17 @@ function lightenHex(hex: string, amount: number): string {
 }
 
 export interface SkeletonProps {
-  /** When true, shows the skeleton. When false, shows children and extracts layout. */
+  /** When true, shows the skeleton. When false, shows children. */
   loading: boolean
-  /** Your component — rendered when not loading. The skeleton is extracted from it. */
+  /** Your component — rendered when not loading. */
   children: ReactNode
   /**
-   * Name this skeleton. When provided:
-   * - After each snapshot, bones are registered to `window.__PRESKEL_BONES[name]`
-   * - The `boneyard build` CLI reads this registry to generate bones JSON files
-   *
-   * @example
-   * <Skeleton name="blog-card" loading={isLoading}>
-   *   <BlogCard />
-   * </Skeleton>
-   *
-   * Then run: npx boneyard capture http://localhost:3000 --out ./src/bones
-   * Which writes: ./src/bones/blog-card.bones.json
+   * Name this skeleton. Used by `npx boneyard build` to identify and capture bones.
+   * Also used to auto-resolve pre-generated bones from the registry.
    */
   name?: string
   /**
-   * Pre-generated bones for zero first-load flash.
-   * Accepts a single `SkeletonResult` or a `ResponsiveBones` map (from `boneyard build`).
-   *
-   * - Single: used regardless of viewport width
-   * - Responsive: boneyard picks the nearest breakpoint match for the current container width
-   *
-   * After the first real render, live `snapshotBones` measurements replace the initial bones.
-   *
-   * @example
-   * import blogBones from './src/bones/blog-card.bones.json'
-   * <Skeleton loading={isLoading} initialBones={blogBones}>
-   *   <BlogCard />
-   * </Skeleton>
+   * Pre-generated bones. Accepts a single `SkeletonResult` or a `ResponsiveBones` map.
    */
   initialBones?: SkeletonResult | ResponsiveBones
   /** Bone color (default: '#e0e0e0') */
@@ -93,20 +70,18 @@ export interface SkeletonProps {
   /** Additional className for the container */
   className?: string
   /**
-   * Shown on the very first load if no cached bones and no initialBones.
-   * Unnecessary when initialBones is provided.
+   * Shown when loading is true and no bones are available.
    */
   fallback?: ReactNode
   /**
-   * Controls how boneyard extracts bones from your component's DOM.
-   * Override the default extraction rules to match your design system.
-   *
-   * @example
-   * // Treat <Card> root divs as leaves, skip icons and footers
-   * snapshotConfig={{
-   *   leafTags: ['p', 'h1', 'h2', 'h3', 'li'],
-   *   excludeSelectors: ['.icon', '[data-no-skeleton]', 'footer'],
-   * }}
+   * Mock content rendered during `npx boneyard build` so the CLI can capture
+   * bone positions even when real data isn't available.
+   * Only rendered when the CLI sets `window.__BONEYARD_BUILD = true`.
+   */
+  fixture?: ReactNode
+  /**
+   * Controls how `npx boneyard build` extracts bones from the fixture.
+   * Stored as a data attribute — the CLI reads it during capture.
    */
   snapshotConfig?: SnapshotConfig
 }
@@ -114,33 +89,9 @@ export interface SkeletonProps {
 /**
  * Wrap any component to get automatic skeleton loading screens.
  *
- * How it works:
- * 1. When loading=false, your children render normally.
- *    After paint, boneyard snapshots the exact bone positions from the DOM.
- * 2. When loading=true, the cached bones are replayed as a skeleton overlay.
- * 3. On the very first load (no cache yet):
- *    - With `initialBones`: shows pre-generated bones immediately, no flash
- *    - Without: shows the `fallback` prop
- *
- * For zero first-load flash, run `npx boneyard capture` to generate initialBones.
- *
- * @example Basic
- * ```tsx
- * import { Skeleton } from 'boneyard/react'
- *
- * <Skeleton name="blog-card" loading={isLoading}>
- *   <BlogCard data={data} />
- * </Skeleton>
- * ```
- *
- * @example With pre-generated responsive bones (zero flash)
- * ```tsx
- * import blogBones from './src/bones/blog-card.bones.json'
- *
- * <Skeleton name="blog-card" loading={isLoading} initialBones={blogBones}>
- *   <BlogCard data={data} />
- * </Skeleton>
- * ```
+ * 1. Run `npx boneyard build` — captures bone positions from your rendered UI
+ * 2. Import the generated registry in your app entry
+ * 3. `<Skeleton name="..." loading={isLoading}>` auto-resolves bones by name
  */
 export function Skeleton({
   loading,
@@ -151,13 +102,15 @@ export function Skeleton({
   animate = true,
   className,
   fallback,
+  fixture,
   snapshotConfig,
 }: SkeletonProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [cachedBones, setCachedBones] = useState<SkeletonResult | null>(null)
   const [containerWidth, setContainerWidth] = useState(0)
 
-  // Track container width so responsive initialBones picks the right breakpoint
+  const isBuildMode = typeof window !== 'undefined' && (window as any).__BONEYARD_BUILD === true
+
+  // Track container width for responsive breakpoint selection
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -169,57 +122,39 @@ export function Skeleton({
     return () => ro.disconnect()
   }, [])
 
-  // After every non-loading render, snapshot the DOM and update the cache
-  useEffect(() => {
-    if (loading || !containerRef.current) return
-
-    let raf1: number, raf2: number
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        const el = containerRef.current
-        if (!el) return
-        const firstChild = el.firstElementChild as Element | null
-        if (!firstChild) return
-        try {
-          const result = snapshotBones(firstChild, name ?? 'component', snapshotConfig)
-          setCachedBones(result)
-
-          // Register to global so `boneyard build` CLI can read it
-          if (name && typeof window !== 'undefined') {
-            const w = window as any
-            w.__BONEYARD_BONES = w.__BONEYARD_BONES ?? {}
-            w.__BONEYARD_BONES[name] = result
-          }
-        } catch {
-          // keep existing cache on error
-        }
-      })
-    })
-
-    return () => {
-      cancelAnimationFrame(raf1)
-      cancelAnimationFrame(raf2)
+  // Data attributes for CLI discovery
+  const dataAttrs: Record<string, string> = {}
+  if (name) {
+    dataAttrs['data-boneyard'] = name
+    if (snapshotConfig) {
+      dataAttrs['data-boneyard-config'] = JSON.stringify(snapshotConfig)
     }
-  }, [loading, name])
+  }
 
-  // Active bones: live cache > explicit initialBones > registry lookup
-  const effectiveInitialBones = initialBones ?? (name ? bonesRegistry.get(name) : undefined)
-  const resolved = !cachedBones && effectiveInitialBones && containerWidth > 0
-    ? resolveResponsive(effectiveInitialBones, containerWidth)
+  // Build mode: render fixture so CLI can capture bones from it
+  if (isBuildMode && fixture) {
+    return (
+      <div ref={containerRef} className={className} style={{ position: 'relative' }} {...dataAttrs}>
+        <div>{fixture}</div>
+      </div>
+    )
+  }
+
+  // Resolve bones: explicit initialBones > registry lookup
+  const effectiveBones = initialBones ?? (name ? bonesRegistry.get(name) : undefined)
+  const activeBones = effectiveBones && containerWidth > 0
+    ? resolveResponsive(effectiveBones, containerWidth)
     : null
-  const activeBones = cachedBones ?? resolved
 
   const showSkeleton = loading && activeBones
   const showFallback = loading && !activeBones
 
   return (
-    <div ref={containerRef} className={className} style={{ position: 'relative' }}>
-      {/* Real content — hidden but still rendered so we can snapshot it */}
+    <div ref={containerRef} className={className} style={{ position: 'relative' }} {...dataAttrs}>
       <div style={showSkeleton ? { visibility: 'hidden' } : undefined}>
         {showFallback ? fallback : children}
       </div>
 
-      {/* Skeleton overlay */}
       {showSkeleton && (
         <div style={{ position: 'absolute', inset: 0 }}>
           <div style={{ position: 'relative', width: '100%', height: activeBones.height }}>
@@ -233,7 +168,6 @@ export function Skeleton({
                   width: b.w,
                   height: b.h,
                   borderRadius: typeof b.r === 'string' ? b.r : `${b.r}px`,
-                  // Container bones are rendered lighter so children stand out on top
                   backgroundColor: b.c ? lightenHex(color, 0.45) : color,
                   animation: animate ? 'boneyard-pulse 1.8s ease-in-out infinite' : undefined,
                 }}

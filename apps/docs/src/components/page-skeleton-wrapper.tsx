@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { Skeleton } from "boneyard/react";
+import { Skeleton } from "@0xgf/boneyard/react";
 
 export function PageSkeletonWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

@@ -5,11 +5,11 @@ Pixel-perfect skeleton loading screens, extracted from your real DOM.
 ## Quick start
 
 ```bash
-npm install boneyard
+npm install @0xgf/boneyard
 ```
 
 ```tsx
-import { Skeleton } from 'boneyard/react'
+import { Skeleton } from '@0xgf/boneyard/react'
 
 <Skeleton name="blog-card" loading={isLoading}>
   <BlogCard data={data} />

@@ -198,8 +198,8 @@ export default function OverviewPage() {
             <div>
               <p className="text-[14px] text-[#1c1917] font-medium mb-2">Wrap your component</p>
               <div className="relative rounded-lg border border-stone-200 bg-[#1a1a1a] p-4 font-mono text-[13px] leading-relaxed">
-                <CopyButton text={`import { Skeleton } from 'boneyard/react'\n\n<Skeleton name="blog-card" loading={isLoading}>\n  {data && <BlogCard data={data} />}\n</Skeleton>`} />
-                <span className="text-[#c084fc]">import</span><span className="text-stone-300">{" { Skeleton } "}</span><span className="text-[#c084fc]">from</span><span className="text-[#86efac]"> &apos;boneyard/react&apos;</span>{"\n\n"}
+                <CopyButton text={`import { Skeleton } from '@0xgf/boneyard/react'\n\n<Skeleton name="blog-card" loading={isLoading}>\n  {data && <BlogCard data={data} />}\n</Skeleton>`} />
+                <span className="text-[#c084fc]">import</span><span className="text-stone-300">{" { Skeleton } "}</span><span className="text-[#c084fc]">from</span><span className="text-[#86efac]"> &apos;boneyard/react&apos;apos;@0xgf/boneyard/react&apos;boneyard/react&apos;apos;</span>{"\n\n"}
                 <span className="text-stone-500">{"<"}</span><span className="text-[#fde68a]">Skeleton</span><span className="text-[#93c5fd]"> name</span><span className="text-stone-300">="blog-card"</span><span className="text-[#93c5fd]"> loading</span><span className="text-stone-300">={"{isLoading}"}</span><span className="text-stone-500">{">"}</span>{"\n"}
                 <span className="text-stone-300">{"  "}{"{data && "}</span><span className="text-stone-500">{"<"}</span><span className="text-[#fde68a]">BlogCard</span><span className="text-stone-300">{" data={data} "}</span><span className="text-stone-500">{"/>"}</span><span className="text-stone-300">{"}"}</span>{"\n"}
                 <span className="text-stone-500">{"</"}</span><span className="text-[#fde68a]">Skeleton</span><span className="text-stone-500">{">"}</span>
