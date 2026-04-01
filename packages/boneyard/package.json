@@ -1,0 +1,67 @@
+{
+  "name": "boneyard",
+  "version": "1.0.0",
+  "description": "Pixel-perfect skeleton loading screens. Wrap your component in <Skeleton> and boneyard snapshots the real DOM layout — no manual descriptors, no configuration.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./layout": {
+      "types": "./dist/layout.d.ts",
+      "import": "./dist/layout.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    }
+  },
+  "bin": {
+    "boneyard": "./bin/boneyard.mjs"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "bun test",
+    "prepublishOnly": "tsc"
+  },
+  "keywords": [
+    "skeleton",
+    "skeleton-screen",
+    "loading",
+    "placeholder",
+    "react",
+    "zero-layout-shift"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xGF/boneyard"
+  },
+  "homepage": "https://github.com/0xGF/boneyard",
+  "optionalDependencies": {
+    "@chenglou/pretext": "^0.0.3"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.15",
+    "@types/react": "^19.0.0",
+    "canvas": "^3.2.2",
+    "playwright": "^1.58.2",
+    "react": "^19.0.0",
+    "typescript": "^5.7.0"
+  }
+}

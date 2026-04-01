@@ -1,0 +1,250 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { BrowserMockup } from "@/components/browser-mockup";
+import { CopyIcon } from "@/components/ui/icons/copy";
+import { CheckIcon } from "@/components/ui/icons/check";
+import { GithubIcon } from "@/components/ui/icons/github";
+import { CopyButton } from "@/components/ui/copy-button";
+
+function useGitHubStars() {
+  const [stars, setStars] = useState<number | null>(null);
+  useEffect(() => {
+    fetch("https://api.github.com/repos/0xGF/boneyard")
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d.stargazers_count === "number") setStars(d.stargazers_count);
+      })
+      .catch(() => { });
+  }, []);
+  return stars;
+}
+
+// ── Static side-by-side mockup ─────────────────────────────────────────────────
+
+function StaticHeroDemo() {
+  return (
+    <BrowserMockup url="localhost:3000">
+      <div className="grid grid-cols-2 gap-3 text-[11px]">
+        {/* Real UI column */}
+        <div>
+          <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-2">Real UI</div>
+          <div className="flex flex-col gap-2">
+            {/* Header row */}
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded-md bg-indigo-500 flex items-center justify-center text-white font-bold text-[9px]">A</div>
+              <span className="text-[12px] font-semibold text-stone-800">Acme Dashboard</span>
+            </div>
+            {/* Stat cards */}
+            <div className="flex gap-1.5">
+              <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg p-2">
+                <div className="text-[9px] text-emerald-600 font-medium">Revenue</div>
+                <div className="text-[13px] font-bold text-emerald-700">$12.3k</div>
+              </div>
+              <div className="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-2">
+                <div className="text-[9px] text-blue-600 font-medium">Users</div>
+                <div className="text-[13px] font-bold text-blue-700">1,204</div>
+              </div>
+              <div className="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                <div className="text-[9px] text-amber-600 font-medium">Orders</div>
+                <div className="text-[13px] font-bold text-amber-700">342</div>
+              </div>
+            </div>
+            {/* Chart */}
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-lg p-2">
+              <div className="flex items-end gap-[2px] h-[36px]">
+                {[40, 65, 45, 80, 60, 90, 55, 75, 85, 70, 95, 60].map((h, i) => (
+                  <div key={i} className="flex-1 bg-indigo-400 rounded-t" style={{ height: `${h}%` }} />
+                ))}
+              </div>
+            </div>
+            {/* Activity rows */}
+            <div className="flex flex-col gap-1">
+              {["Alice — $240 — Done", "Bob — $89 — Pending"].map((row, i) => (
+                <div key={i} className="h-5 bg-stone-50 border border-stone-100 rounded flex items-center px-2 text-[9px] text-stone-500 truncate">{row}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Skeleton column */}
+        <div>
+          <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-2">Skeleton</div>
+          <div className="flex flex-col gap-2">
+            {/* Header row */}
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded-md bg-stone-200 animate-pulse" />
+              <div className="h-3 w-24 rounded bg-stone-200 animate-pulse" />
+            </div>
+            {/* Stat cards */}
+            <div className="flex gap-1.5">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex-1 rounded-lg border border-stone-100 p-2 space-y-1.5">
+                  <div className="h-2 w-8 rounded bg-stone-200 animate-pulse" />
+                  <div className="h-3.5 w-10 rounded bg-stone-200 animate-pulse" />
+                </div>
+              ))}
+            </div>
+            {/* Chart */}
+            <div className="rounded-lg border border-stone-100 p-2">
+              <div className="flex items-end gap-[2px] h-[36px]">
+                {[40, 65, 45, 80, 60, 90, 55, 75, 85, 70, 95, 60].map((h, i) => (
+                  <div key={i} className="flex-1 rounded-t bg-stone-200 animate-pulse" style={{ height: `${h}%` }} />
+                ))}
+              </div>
+            </div>
+            {/* Activity rows */}
+            <div className="flex flex-col gap-1">
+              {[0, 1].map((i) => (
+                <div key={i} className="h-5 rounded border border-stone-100 bg-stone-200 animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </BrowserMockup>
+  );
+}
+
+export default function OverviewPage() {
+  const [copied, setCopied] = useState(false);
+  const stars = useGitHubStars();
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText("npm install boneyard").then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  return (
+    <div className="max-w-[720px] px-6 pt-14 pb-12 space-y-10">
+      {/* Hero */}
+      <div className="space-y-6">
+        <h1 className="text-[32px] leading-[1.15] font-bold tracking-tight">
+          Skeleton screens.
+          <br />
+          <span className="inline-block">
+            <span className="shimmer-text">Automatically generated.</span>
+            <span className="shimmer-underline" />
+          </span>
+        </h1>
+
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={handleCopy}
+            className="group flex items-center h-9 rounded-lg bg-[#1c1917] text-[13px] font-[family-name:var(--font-mono)] text-[#e7e5e4] hover:bg-[#292524] transition-colors overflow-hidden"
+          >
+            <span className="flex items-center gap-2 px-3.5">
+              <span className="text-[#78716c]">$</span>
+              npm install boneyard
+            </span>
+            <span className="flex items-center justify-center w-9 h-9 border-l border-white/10 text-[#78716c] group-hover:text-[#a8a29e] transition-colors">
+              {copied ? (
+                <CheckIcon size={14} />
+              ) : (
+                <CopyIcon size={14} />
+              )}
+            </span>
+          </button>
+
+          <a
+            href="https://github.com/0xGF/boneyard"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 h-9 px-3.5 rounded-lg border border-[#e7e5e4] text-[13px] text-[#57534e] hover:border-[#d6d3d1] hover:text-[#1c1917] transition-colors"
+          >
+            <GithubIcon size={16} />
+            GitHub
+            {stars !== null && stars > 0 && (
+              <span className="flex items-center gap-1 text-[12px] text-[#a8a29e] ml-0.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-[#d6d3d1]">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                {stars}
+              </span>
+            )}
+          </a>
+        </div>
+
+        <div className="space-y-4 text-[15px] leading-relaxed text-[#78716c]">
+          <p>
+            <strong className="text-[#1c1917] pr-1">boneyard</strong> snapshots your real
+            UI and captures a flat list of skeleton &ldquo;bones&rdquo; &mdash; positioned, sized
+            rectangles that mirror the page exactly.
+          </p>
+          <p>
+            No manual measurement. No hand-tuned placeholders. Wrap your component
+            in <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">&lt;Skeleton&gt;</code> and
+            get pixel-perfect skeleton screens that stay in sync
+            with your actual layout.
+          </p>
+        </div>
+      </div>
+
+      {/* Browser demo */}
+      <StaticHeroDemo />
+
+      {/* How you use it */}
+      <div>
+        <div className="section-divider">
+          <span>How you use it</span>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          {/* Step 1 */}
+          <div className="flex gap-3">
+            <div className="w-5 h-5 rounded-full bg-stone-800 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</div>
+            <div>
+              <p className="text-[14px] text-[#1c1917] font-medium mb-2">Wrap your component</p>
+              <div className="relative rounded-lg border border-stone-200 bg-[#1a1a1a] p-4 font-mono text-[13px] leading-relaxed">
+                <CopyButton text={`import { Skeleton } from 'boneyard/react'\n\n<Skeleton name="blog-card" loading={isLoading}>\n  {data && <BlogCard data={data} />}\n</Skeleton>`} />
+                <span className="text-[#c084fc]">import</span><span className="text-stone-300">{" { Skeleton } "}</span><span className="text-[#c084fc]">from</span><span className="text-[#86efac]"> &apos;boneyard/react&apos;</span>{"\n\n"}
+                <span className="text-stone-500">{"<"}</span><span className="text-[#fde68a]">Skeleton</span><span className="text-[#93c5fd]"> name</span><span className="text-stone-300">="blog-card"</span><span className="text-[#93c5fd]"> loading</span><span className="text-stone-300">={"{isLoading}"}</span><span className="text-stone-500">{">"}</span>{"\n"}
+                <span className="text-stone-300">{"  "}{"{data && "}</span><span className="text-stone-500">{"<"}</span><span className="text-[#fde68a]">BlogCard</span><span className="text-stone-300">{" data={data} "}</span><span className="text-stone-500">{"/>"}</span><span className="text-stone-300">{"}"}</span>{"\n"}
+                <span className="text-stone-500">{"</"}</span><span className="text-[#fde68a]">Skeleton</span><span className="text-stone-500">{">"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex gap-3">
+            <div className="w-5 h-5 rounded-full bg-stone-800 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</div>
+            <div>
+              <p className="text-[14px] text-[#1c1917] font-medium mb-2">Run the CLI once to generate bones</p>
+              <div className="relative rounded-lg border border-stone-200 bg-[#1a1a1a] p-4 font-mono text-[13px] leading-relaxed">
+                <CopyButton text="npx boneyard build" />
+                <span className="text-[#a78bfa]">npx</span><span className="text-stone-300"> boneyard build</span>
+              </div>
+              <p className="text-[13px] text-[#78716c] mt-2">
+                Auto-detects your running dev server. Visits at 375px, 768px, 1280px. Writes responsive JSON to <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">src/bones/</code> automatically.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex gap-3">
+            <div className="w-5 h-5 rounded-full bg-stone-800 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</div>
+            <div>
+              <p className="text-[14px] text-[#1c1917] font-medium mb-2">Import the registry once</p>
+              <div className="relative rounded-lg border border-stone-200 bg-[#1a1a1a] p-4 font-mono text-[13px] leading-relaxed">
+                <CopyButton text={`import './bones/registry'`} />
+                <span className="text-[#c084fc]">import</span><span className="text-[#86efac]"> &apos;./bones/registry&apos;</span>
+              </div>
+              <p className="text-[13px] text-[#78716c] mt-2">
+                Add this to your app entry (e.g. <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">layout.tsx</code>). Every <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">&lt;Skeleton&gt;</code> auto-resolves its bones by name.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-[14px] text-[#78716c] mt-4">
+          The skeleton is extracted from your <strong className="text-[#1c1917]">real rendered content</strong>.
+          Run <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">npx boneyard build</code> once
+          to generate bones JSON from your live DOM. Import the registry once and every <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">&lt;Skeleton&gt;</code> auto-resolves — pixel-perfect, zero layout shift.
+        </p>
+      </div>
+
+    </div>
+  );
+}
