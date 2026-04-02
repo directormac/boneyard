@@ -329,7 +329,7 @@ function SkeletonRenderer({
           <div
             key={i}
             className={`absolute ${className}`}
-            style={{ left: b.x, top: b.y, width: b.w, height: b.h, borderRadius: r, ...textureStyle }}
+            style={{ left: `${b.x}%`, top: b.y, width: `${b.w}%`, height: b.h, borderRadius: r, ...textureStyle }}
           />
         );
       })}

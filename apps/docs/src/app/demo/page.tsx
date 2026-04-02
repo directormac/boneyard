@@ -5,16 +5,17 @@ import { snapshotBones } from "boneyard-js";
 import { Skeleton } from "boneyard-js/react";
 import type { SkeletonResult, SnapshotConfig } from "boneyard-js";
 import { Badge } from "@/components/ui/badge";
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
 const users = [
-  { name: "Priya Sharma", role: "Engineering Lead", avatar: 1, status: "online" },
-  { name: "Jake Morrison", role: "Product Designer", avatar: 2, status: "online" },
-  { name: "Lea Chen", role: "Backend Engineer", avatar: 3, status: "away" },
-  { name: "Tom Nakamura", role: "Data Scientist", avatar: 4, status: "offline" },
-  { name: "Sarah O'Brien", role: "DevOps", avatar: 5, status: "online" },
+  { name: "Priya Sharma", role: "Engineering Lead", avatar: "a8a29e", status: "online" },
+  { name: "Jake Morrison", role: "Product Designer", avatar: "78716c", status: "online" },
+  { name: "Lea Chen", role: "Backend Engineer", avatar: "c4b5a2", status: "away" },
+  { name: "Tom Nakamura", role: "Data Scientist", avatar: "57534e", status: "offline" },
+  { name: "Sarah O'Brien", role: "DevOps", avatar: "d6d3d1", status: "online" },
 ];
 
 const notifications = [
@@ -140,7 +141,19 @@ function useSkeletonCapture() {
 
   const totalBones = Object.values(bones).reduce((sum, b) => sum + b.bones.length, 0);
 
-  return { setRef, bones, loading, setLoading, generate, isGenerating, totalBones };
+  // Synchronous capture — captures bones immediately from current DOM
+  const captureSync = useCallback(() => {
+    const captured: Record<string, SkeletonResult> = {};
+    refs.current.forEach((el, name) => {
+      try {
+        captured[name] = snapshotBones(el, name, SNAPSHOT_CONFIG);
+      } catch (e) {}
+    });
+    setBones(captured);
+    return captured;
+  }, []);
+
+  return { setRef, bones, loading, setLoading, generate, isGenerating, totalBones, captureSync };
 }
 
 // ── Skeleton wrapper: captures from ref, passes bones to <Skeleton> ──────────
@@ -165,8 +178,20 @@ function SkeletonSection({
 // ── Demo Page ────────────────────────────────────────────────────────────────
 
 export default function DemoPage() {
-  const { setRef, bones, loading, setLoading, generate, isGenerating, totalBones } = useSkeletonCapture();
+  const { setRef, bones, loading, setLoading, generate, isGenerating, totalBones, captureSync } = useSkeletonCapture();
   const [showSkeleton, setShowSkeleton] = useState(false);
+
+  // Toggle skeleton with live capture for pixel-perfect accuracy
+  const toggleSkeleton = useCallback(() => {
+    if (showSkeleton) {
+      setShowSkeleton(false);
+      setLoading(false);
+    } else {
+      captureSync();
+      setShowSkeleton(true);
+      setLoading(true);
+    }
+  }, [showSkeleton, setLoading, captureSync]);
 
   // Use registry bones by default, live-captured bones after clicking generate
   const effectiveLoading = showSkeleton || loading;
@@ -184,65 +209,53 @@ export default function DemoPage() {
           <h1 className="text-[48px] md:text-[64px] font-black tracking-tight leading-[0.95] mb-4 text-stone-900">
             Never Write A<br />Skeleton Again
           </h1>
-          <p className="text-[16px] text-stone-500 max-w-[480px] mx-auto mb-6">
+          <p className="text-[16px] text-stone-500 max-w-[480px] mx-auto">
             One click. Zero layout thrashing. Pixel-perfect loading states extracted directly from your real UI.
           </p>
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => setShowSkeleton(!showSkeleton)}
-              className={`inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold transition-all ${
-                showSkeleton
-                  ? "bg-stone-200 text-stone-700 hover:bg-stone-300"
-                  : "bg-stone-900 text-white hover:bg-stone-800 shadow-lg shadow-stone-300 hover:shadow-xl hover:shadow-stone-300 hover:-translate-y-0.5"
-              }`}
-            >
-              {showSkeleton ? (
-                <>Show UI</>
-              ) : (
-                <>Show Skeleton &#x2192;</>
-              )}
-              </button>
-          </div>
+        </div>
+
+        {/* Sticky skeleton toggle */}
+        <div className="sticky top-4 z-[100] flex justify-center">
+          <button
+            onClick={toggleSkeleton}
+            className="inline-flex items-center justify-center w-[120px] py-2.5 rounded-full text-[13px] font-semibold shadow-xl transition-all bg-stone-900 text-white hover:bg-stone-800"
+          >
+            {showSkeleton ? "Show UI" : "Skeleton"}
+          </button>
         </div>
 
         {/* The app UI with in-place skeleton */}
         <div>
-          <div className="text-[10px] font-mono text-stone-400 uppercase tracking-wider mb-2 px-1">
-            {loading ? "Skeleton mode — dynamic content replaced" : "Your ridiculously complex interface"}
-          </div>
-
           <div className="relative flex flex-col bg-stone-50 text-[13px] overflow-hidden rounded-xl border border-stone-200" style={{ minHeight: 700 }}>
             {/* ── Top nav bar — always visible ── */}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-stone-200">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-[12px]">N</div>
-                <span className="font-semibold text-stone-800 text-[14px]">Nexus</span>
-                <div className="h-5 w-px bg-stone-200 mx-1" />
-                <div className="flex gap-1">
+            <div className="flex items-center justify-between px-3 md:px-4 bg-white border-b border-stone-200">
+              <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                <div className="shrink-0 pt-5 origin-left"><Logo /></div>
+                <div className="hidden md:block h-5 w-px bg-stone-200 mx-1" />
+                <div className="hidden md:flex gap-1">
                   {["Dashboard", "Analytics", "Projects", "Settings"].map((tab, i) => (
-                    <button key={tab} className={`px-3 py-1 rounded-md text-[12px] ${
-                      i === 0 ? "bg-stone-900 text-white font-medium" : "text-stone-500 hover:bg-stone-100"
-                    }`}>{tab}</button>
+                    <button key={tab} className={`px-3 py-1 rounded-md text-[12px] ${i === 0 ? "bg-stone-900 text-white font-medium" : "text-stone-500 hover:bg-stone-100"
+                      }`}>{tab}</button>
                   ))}
                 </div>
               </div>
-              <div className="flex items-center gap-2.5">
-                <div className="flex items-center gap-1.5 bg-stone-100 rounded-lg px-3 py-1.5 text-stone-400 text-[12px] w-[200px]">
+              <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-1.5 bg-stone-100 rounded-lg px-3 py-1.5 text-stone-400 text-[12px] w-[200px]">
                   <span className="text-[11px]">&#x2315;</span>
                   <span>Search anything...</span>
                   <span className="ml-auto text-[10px] bg-stone-200 px-1.5 py-0.5 rounded text-stone-500">&#x2318;K</span>
                 </div>
                 <div className="relative">
-                  <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-[14px]">&#x1F514;</div>
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-stone-100 flex items-center justify-center text-[13px] md:text-[14px]">&#x1F514;</div>
                   <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full text-[8px] text-white flex items-center justify-center font-bold">3</div>
                 </div>
-                <img src="https://picsum.photos/seed/demo1/32/32" alt="avatar" className="w-8 h-8 rounded-full object-cover" />
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-300 shrink-0" />
               </div>
             </div>
 
             <div className="flex flex-1">
-              {/* ── Left sidebar ── */}
-              <aside className="w-[220px] shrink-0 bg-white border-r border-stone-200 p-3 flex flex-col gap-4">
+              {/* ── Left sidebar — hidden on mobile ── */}
+              <aside className="hidden md:flex w-[220px] shrink-0 bg-white border-r border-stone-200 p-3 flex-col gap-4">
                 <div>
                   <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-2 px-1">Team</div>
                   <SkeletonSection name="sidebar-nav" loading={effectiveLoading} bones={bones} setRef={setRef}
@@ -264,10 +277,9 @@ export default function DemoPage() {
                       {users.map((u) => (
                         <div key={u.name} className="flex items-center gap-2 px-2 py-1.5 rounded-md">
                           <div className="relative">
-                            <img src={`https://picsum.photos/seed/u${u.avatar}/28/28`} alt="" className="w-7 h-7 rounded-full object-cover" />
-                            <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
-                              u.status === "online" ? "bg-emerald-400" : u.status === "away" ? "bg-amber-400" : "bg-stone-300"
-                            }`} />
+                            <img src={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect fill='%23${u.avatar}' width='28' height='28' rx='14'/%3E%3C/svg%3E`} alt="" className="w-7 h-7 rounded-full object-cover" />
+                            <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${u.status === "online" ? "bg-emerald-400" : u.status === "away" ? "bg-amber-400" : "bg-stone-300"
+                              }`} />
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="text-[12px] font-medium text-stone-700 truncate">{u.name}</div>
@@ -311,9 +323,8 @@ export default function DemoPage() {
                       <div className="space-y-1.5 bg-stone-50 rounded-lg p-2">
                         {chatMessages.map((m, i) => (
                           <div key={i} className={`flex ${m.self ? "justify-end" : "justify-start"}`}>
-                            <div className={`px-2 py-1 rounded-lg text-[11px] max-w-[85%] ${
-                              m.self ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-600"
-                            }`}>{m.text}</div>
+                            <div className={`px-2 py-1 rounded-lg text-[11px] max-w-[85%] ${m.self ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-600"
+                              }`}>{m.text}</div>
                           </div>
                         ))}
                         <div className="flex items-center gap-1.5 mt-1">
@@ -326,9 +337,8 @@ export default function DemoPage() {
                     <div className="space-y-1.5 bg-stone-50 rounded-lg p-2">
                       {chatMessages.map((m, i) => (
                         <div key={i} className={`flex ${m.self ? "justify-end" : "justify-start"}`}>
-                          <div className={`px-2 py-1 rounded-lg text-[11px] max-w-[85%] ${
-                            m.self ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-600"
-                          }`}>{m.text}</div>
+                          <div className={`px-2 py-1 rounded-lg text-[11px] max-w-[85%] ${m.self ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-600"
+                            }`}>{m.text}</div>
                         </div>
                       ))}
                       <div className="flex items-center gap-1.5 mt-1">
@@ -345,7 +355,7 @@ export default function DemoPage() {
                 {/* Stats row */}
                 <SkeletonSection name="dashboard-stats" loading={effectiveLoading} bones={bones} setRef={setRef}
                   fixture={
-                    <div className="grid grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                       {[
                         { label: "Total Revenue", value: "$128.4k", change: "+12.3%" },
                         { label: "Active Users", value: "24,891", change: "+8.1%" },
@@ -363,7 +373,7 @@ export default function DemoPage() {
                     </div>
                   }
                 >
-                  <div className="grid grid-cols-4 gap-2.5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                     {[
                       { label: "Total Revenue", value: "$128.4k", change: "+12.3%", trend: "up" },
                       { label: "Active Users", value: "24,891", change: "+8.1%", trend: "up" },
@@ -384,7 +394,7 @@ export default function DemoPage() {
                 </SkeletonSection>
 
                 {/* Charts row */}
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                   <div className="bg-white rounded-xl border border-stone-200 p-3">
                     <div className="text-[11px] font-semibold text-stone-700 mb-1">Traffic (7d)</div>
                     <div className="text-[9px] text-stone-400 mb-2">Requests per second</div>
@@ -417,14 +427,14 @@ export default function DemoPage() {
                       fixture={
                         <div className="flex items-end gap-[2px] h-[40px]">
                           {barData.map((h, i) => (
-                            <div key={i} className="flex-1 rounded-t bg-indigo-400 opacity-80" style={{ height: `${h}%` }} />
+                            <div key={i} className="flex-1 rounded-t bg-stone-400 opacity-80" style={{ height: `${h}%` }} />
                           ))}
                         </div>
                       }
                     >
                       <div className="flex items-end gap-[2px] h-[40px]">
                         {barData.map((h, i) => (
-                          <div key={i} className="flex-1 rounded-t bg-indigo-400 opacity-80" style={{ height: `${h}%` }} />
+                          <div key={i} className="flex-1 rounded-t bg-stone-400 opacity-80" style={{ height: `${h}%` }} />
                         ))}
                       </div>
                     </SkeletonSection>
@@ -479,8 +489,8 @@ export default function DemoPage() {
                 </div>
 
                 {/* API table + activity */}
-                <div className="grid grid-cols-5 gap-2.5">
-                  <div className="col-span-3 bg-white rounded-xl border border-stone-200 overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-2.5">
+                  <div className="col-span-1 md:col-span-3 bg-white rounded-xl border border-stone-200 overflow-hidden">
                     <div className="flex items-center justify-between px-3 py-2 border-b border-stone-100">
                       <span className="text-[11px] font-semibold text-stone-700">API Endpoints</span>
                       <div className="flex gap-1">
@@ -524,21 +534,19 @@ export default function DemoPage() {
                             <tr key={row.endpoint} className="border-b border-stone-50">
                               <td className="px-3 py-1.5 font-mono text-stone-700 font-medium">{row.endpoint}</td>
                               <td className="px-2 py-1.5">
-                                <Badge className={`text-[8px] ${
-                                  row.method === "GET" ? "bg-blue-50 text-blue-600" :
+                                <Badge className={`text-[8px] ${row.method === "GET" ? "bg-blue-50 text-blue-600" :
                                   row.method === "POST" ? "bg-emerald-50 text-emerald-600" :
-                                  "bg-amber-50 text-amber-600"
-                                }`}>{row.method}</Badge>
+                                    "bg-amber-50 text-amber-600"
+                                  }`}>{row.method}</Badge>
                               </td>
                               <td className="px-2 py-1.5 font-mono text-stone-500">{row.p50}</td>
                               <td className="px-2 py-1.5 font-mono text-stone-500">{row.p99}</td>
                               <td className="px-2 py-1.5 font-mono text-stone-500">{row.rpm}</td>
                               <td className="px-3 py-1.5">
                                 <div className="flex items-center gap-1">
-                                  <div className={`w-1.5 h-1.5 rounded-full ${
-                                    row.status === "healthy" ? "bg-emerald-400" :
+                                  <div className={`w-1.5 h-1.5 rounded-full ${row.status === "healthy" ? "bg-emerald-400" :
                                     row.status === "degraded" ? "bg-amber-400" : "bg-red-400"
-                                  }`} />
+                                    }`} />
                                   <span className="text-stone-500 capitalize">{row.status}</span>
                                 </div>
                               </td>
@@ -549,10 +557,10 @@ export default function DemoPage() {
                     </SkeletonSection>
                   </div>
 
-                  <div className="col-span-2 bg-white rounded-xl border border-stone-200 overflow-hidden">
+                  <div className="col-span-1 md:col-span-2 bg-white rounded-xl border border-stone-200 overflow-hidden">
                     <div className="flex items-center justify-between px-3 py-2 border-b border-stone-100">
                       <span className="text-[11px] font-semibold text-stone-700">Activity Feed</span>
-                      <button className="text-[10px] text-indigo-600 font-medium">View all</button>
+                      <button className="text-[10px] text-stone-600 font-medium">View all</button>
                     </div>
                     <SkeletonSection name="activity" loading={effectiveLoading} bones={bones} setRef={setRef}
                       fixture={
@@ -572,11 +580,10 @@ export default function DemoPage() {
                       <div className="divide-y divide-stone-50">
                         {notifications.map((n, i) => (
                           <div key={i} className="flex items-start gap-2 px-3 py-2">
-                            <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
-                              n.type === "success" ? "bg-emerald-400" :
+                            <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${n.type === "success" ? "bg-emerald-400" :
                               n.type === "warning" ? "bg-amber-400" :
-                              n.type === "error" ? "bg-red-400" : "bg-blue-400"
-                            }`} />
+                                n.type === "error" ? "bg-red-400" : "bg-blue-400"
+                              }`} />
                             <div className="min-w-0 flex-1">
                               <div className="text-[11px] text-stone-600 leading-tight">{n.text}</div>
                               <div className="text-[9px] text-stone-400 mt-0.5">{n.time} ago</div>
@@ -594,12 +601,12 @@ export default function DemoPage() {
                     <span className="text-[11px] font-semibold text-stone-700">Project Board</span>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="sm" className="text-[10px] h-6 px-2 text-stone-500">Filter</Button>
-                      <Button variant="ghost" size="sm" className="text-[10px] h-6 px-2 text-indigo-600">+ New</Button>
+                      <Button variant="ghost" size="sm" className="text-[10px] h-6 px-2 text-stone-600">+ New</Button>
                     </div>
                   </div>
                   <SkeletonSection name="kanban" loading={effectiveLoading} bones={bones} setRef={setRef}
                     fixture={
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {kanbanColumns.map((col) => (
                           <div key={col.title} className={`rounded-lg p-1.5 ${col.color}`}>
                             <div className="flex items-center justify-between mb-1.5 px-1">
@@ -623,7 +630,7 @@ export default function DemoPage() {
                       </div>
                     }
                   >
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {kanbanColumns.map((col) => (
                         <div key={col.title} className={`rounded-lg p-1.5 ${col.color}`}>
                           <div className="flex items-center justify-between mb-1.5 px-1">
@@ -638,10 +645,9 @@ export default function DemoPage() {
                                   {card.tags.map((tag) => (
                                     <span key={tag} className="text-[8px] px-1 py-0.5 rounded-full bg-stone-100 text-stone-500">{tag}</span>
                                   ))}
-                                  <div className={`ml-auto w-1.5 h-1.5 rounded-full ${
-                                    card.priority === "high" ? "bg-red-400" :
+                                  <div className={`ml-auto w-1.5 h-1.5 rounded-full ${card.priority === "high" ? "bg-red-400" :
                                     card.priority === "medium" ? "bg-amber-400" : "bg-stone-300"
-                                  }`} />
+                                    }`} />
                                 </div>
                               </div>
                             ))}
@@ -653,11 +659,11 @@ export default function DemoPage() {
                 </div>
 
                 {/* Files + progress */}
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                   <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
                     <div className="flex items-center justify-between px-3 py-2 border-b border-stone-100">
                       <span className="text-[11px] font-semibold text-stone-700">Recent Files</span>
-                      <button className="text-[10px] text-indigo-600 font-medium">Browse all</button>
+                      <button className="text-[10px] text-stone-600 font-medium">Browse all</button>
                     </div>
                     <SkeletonSection name="files" loading={effectiveLoading} bones={bones} setRef={setRef}
                       fixture={
@@ -677,15 +683,14 @@ export default function DemoPage() {
                       <div className="divide-y divide-stone-50">
                         {recentFiles.map((f) => (
                           <div key={f.name} className="flex items-center gap-2.5 px-3 py-1.5">
-                            <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-semibold ${
-                              f.icon === "spreadsheet" ? "bg-emerald-50 text-emerald-600" :
+                            <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-semibold ${f.icon === "spreadsheet" ? "bg-emerald-50 text-emerald-600" :
                               f.icon === "design" ? "bg-purple-50 text-purple-600" :
-                              f.icon === "code" ? "bg-blue-50 text-blue-600" :
-                              "bg-stone-50 text-stone-500"
-                            }`}>
+                                f.icon === "code" ? "bg-blue-50 text-blue-600" :
+                                  "bg-stone-50 text-stone-500"
+                              }`}>
                               {f.icon === "spreadsheet" ? "XL" :
-                               f.icon === "design" ? "FG" :
-                               f.icon === "code" ? "{ }" : "DC"}
+                                f.icon === "design" ? "FG" :
+                                  f.icon === "code" ? "{ }" : "DC"}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="text-[11px] font-medium text-stone-700 truncate">{f.name}</div>
@@ -724,7 +729,7 @@ export default function DemoPage() {
                       >
                         <div className="space-y-2">
                           {[
-                            { label: "Frontend", pct: 78, color: "bg-indigo-500" },
+                            { label: "Frontend", pct: 78, color: "bg-stone-700" },
                             { label: "Backend", pct: 92, color: "bg-emerald-500" },
                             { label: "Design", pct: 45, color: "bg-purple-500" },
                             { label: "QA", pct: 33, color: "bg-amber-500" },
@@ -787,6 +792,247 @@ export default function DemoPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* ── Additional test components ── */}
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-3 space-y-3">
+          {/* User profile card */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-profile" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div className="flex flex-col items-center text-center">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%23a8a29e' width='64' height='64' rx='32'/%3E%3C/svg%3E" alt="" className="w-16 h-16 rounded-full mb-3" />
+                <div className="text-[14px] font-bold text-stone-800 w-fit">Sarah Chen</div>
+                <div className="text-[11px] text-stone-400 mb-3 w-fit">Senior Engineer &middot; Platform Team</div>
+                <div className="flex gap-6 text-center mb-3">
+                  <div><div className="text-[16px] font-bold text-stone-800">142</div><div className="text-[9px] text-stone-400">Commits</div></div>
+                  <div><div className="text-[16px] font-bold text-stone-800">38</div><div className="text-[9px] text-stone-400">PRs</div></div>
+                  <div><div className="text-[16px] font-bold text-stone-800">12</div><div className="text-[9px] text-stone-400">Reviews</div></div>
+                </div>
+                <div className="flex gap-1.5 w-full">
+                  <button className="flex-1 text-[11px] bg-stone-900 text-white rounded-lg py-1.5 font-medium">Message</button>
+                  <button className="flex-1 text-[11px] bg-stone-100 text-stone-600 rounded-lg py-1.5 font-medium">Follow</button>
+                </div>
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Pricing card */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-pricing" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div>
+                <div className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider mb-1 w-fit">Pro Plan</div>
+                <div className="flex items-baseline gap-1 mb-3">
+                  <span className="text-[28px] font-black text-stone-900">$29</span>
+                  <span className="text-[12px] text-stone-400">/month</span>
+                </div>
+                <div className="space-y-2 mb-4">
+                  {["Unlimited projects", "50GB storage", "Priority support", "Custom domains", "API access"].map(f => (
+                    <div key={f} className="flex items-center gap-2 text-[11px] text-stone-600">
+                      <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[8px] shrink-0">&#x2713;</div>
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <button className="w-full text-[12px] bg-indigo-600 text-white rounded-lg py-2 font-semibold">Get Started</button>
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Notification list */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-notifications" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div className="space-y-3">
+                <div className="text-[12px] font-semibold text-stone-700 w-fit">Notifications</div>
+                {[
+                  { title: "New comment on PR #421", desc: "Jake left a review on your pull request", time: "2m" },
+                  { title: "Deploy succeeded", desc: "Production deploy v2.4.1 completed", time: "15m" },
+                  { title: "Invited to project", desc: "You were added to Design System", time: "1h" },
+                  { title: "Billing alert", desc: "Usage approaching 80% of plan limit", time: "3h" },
+                ].map((n, i) => (
+                  <div key={i} className="flex gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-stone-200 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-medium text-stone-700 w-fit">{n.title}</p>
+                      <p className="text-[10px] text-stone-400 w-fit">{n.desc}</p>
+                      <p className="text-[9px] text-stone-400 mt-0.5 w-fit">{n.time} ago</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Settings form */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-form" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div className="space-y-3">
+                <div className="text-[12px] font-semibold text-stone-700 w-fit">Account Settings</div>
+                <div>
+                  <label className="text-[10px] text-stone-500 font-medium block mb-1 w-fit">Display Name</label>
+                  <input type="text" value="Sarah Chen" readOnly className="w-full text-[11px] border border-stone-200 rounded-lg px-3 py-1.5 text-stone-700 bg-white" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-stone-500 font-medium block mb-1 w-fit">Email</label>
+                  <input type="text" value="sarah@example.com" readOnly className="w-full text-[11px] border border-stone-200 rounded-lg px-3 py-1.5 text-stone-700 bg-white" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-stone-500 font-medium block mb-1 w-fit">Role</label>
+                  <div className="w-full text-[11px] border border-stone-200 rounded-lg px-3 py-1.5 text-stone-700 bg-stone-50">Senior Engineer</div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="flex-1 text-[11px] bg-stone-900 text-white rounded-lg py-1.5 font-medium">Save</button>
+                  <button className="flex-1 text-[11px] bg-stone-100 text-stone-500 rounded-lg py-1.5 font-medium">Cancel</button>
+                </div>
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Media gallery */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-gallery" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div>
+                <div className="text-[12px] font-semibold text-stone-700 mb-2 w-fit">Media Gallery</div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[1,2,3,4,5,6].map(i => (
+                    <div key={i} className="aspect-square rounded-lg bg-stone-200" />
+                  ))}
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[10px] text-stone-400">6 of 24 items</span>
+                  <button className="text-[10px] text-stone-600 font-medium">View all</button>
+                </div>
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Timeline */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-timeline" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div>
+                <div className="text-[12px] font-semibold text-stone-700 mb-3 w-fit">Recent Activity</div>
+                <div className="space-y-3 relative">
+                  <div className="absolute left-[7px] top-2 bottom-2 w-px bg-stone-200" />
+                  {[
+                    { action: "Pushed 3 commits to main", time: "10 min ago" },
+                    { action: "Opened PR #422: Fix auth flow", time: "1 hour ago" },
+                    { action: "Closed issue #389", time: "3 hours ago" },
+                    { action: "Created branch feature/dark-mode", time: "Yesterday" },
+                  ].map((e, i) => (
+                    <div key={i} className="flex gap-3 relative">
+                      <div className="w-[15px] h-[15px] rounded-full border-2 border-stone-300 bg-white shrink-0 z-10" />
+                      <div>
+                        <div className="text-[11px] text-stone-700 w-fit">{e.action}</div>
+                        <div className="text-[9px] text-stone-400 w-fit">{e.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Comment thread */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-comments" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div className="space-y-3">
+                <div className="text-[12px] font-semibold text-stone-700 w-fit">Discussion</div>
+                {[
+                  { name: "Alex", text: "Should we migrate to the new API before the freeze?", time: "2h" },
+                  { name: "Priya", text: "I think so. The old endpoints are getting rate-limited more aggressively now.", time: "1h" },
+                  { name: "Jake", text: "Agreed. I can start on the client SDK changes tomorrow.", time: "45m" },
+                ].map((c, i) => (
+                  <div key={i} className="flex gap-2">
+                    <div className="w-6 h-6 rounded-full bg-stone-300 shrink-0" />
+                    <div className="bg-stone-50 rounded-lg px-2.5 py-1.5 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[10px] font-semibold text-stone-700">{c.name}</span>
+                        <span className="text-[9px] text-stone-400">{c.time} ago</span>
+                      </div>
+                      <p className="text-[11px] text-stone-600 w-fit">{c.text}</p>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex gap-2 items-center">
+                  <div className="w-6 h-6 rounded-full bg-stone-300 shrink-0" />
+                  <input type="text" placeholder="Write a reply..." readOnly className="flex-1 text-[11px] border border-stone-200 rounded-lg px-3 py-1.5 placeholder:text-stone-300" />
+                </div>
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Tag cloud / badges */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-tags" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div>
+                <div className="text-[12px] font-semibold text-stone-700 mb-2 w-fit">Popular Tags</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {["React", "TypeScript", "Next.js", "Tailwind", "GraphQL", "Prisma", "Docker", "AWS", "PostgreSQL", "Redis", "Node.js", "Rust"].map(tag => (
+                    <span key={tag} className="text-[10px] px-2 py-1 rounded-full bg-stone-100 text-stone-600 font-medium">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Music player */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-player" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div className="flex gap-3 items-center">
+                <div className="w-12 h-12 rounded-lg bg-stone-300 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] font-semibold text-stone-700 truncate w-fit">Midnight City</div>
+                  <div className="text-[10px] text-stone-400 w-fit">M83 &middot; Hurry Up, We&apos;re Dreaming</div>
+                  <div className="h-1 bg-stone-100 rounded-full mt-2 overflow-hidden">
+                    <div className="h-full bg-stone-400 rounded-full" style={{ width: '65%' }} />
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center text-[10px]">&#x23EE;</div>
+                  <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center text-white text-[10px]">&#x25B6;</div>
+                  <div className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center text-[10px]">&#x23ED;</div>
+                </div>
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Metric cards row */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-metrics" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Uptime", value: "99.9%", sub: "Last 30 days" },
+                  { label: "Latency", value: "24ms", sub: "p95 avg" },
+                  { label: "Errors", value: "0.02%", sub: "Rate this week" },
+                ].map(m => (
+                  <div key={m.label} className="text-center">
+                    <div className="text-[9px] text-stone-400 uppercase tracking-wider w-fit mx-auto">{m.label}</div>
+                    <div className="text-[20px] font-black text-stone-800 w-fit mx-auto">{m.value}</div>
+                    <div className="text-[9px] text-stone-400 w-fit mx-auto">{m.sub}</div>
+                  </div>
+                ))}
+              </div>
+            </SkeletonSection>
+          </div>
+
+          {/* Breadcrumb + search */}
+          <div className="bg-white rounded-xl border border-stone-200 p-4 break-inside-avoid">
+            <SkeletonSection name="test-nav" loading={effectiveLoading} bones={bones} setRef={setRef}>
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5 text-[10px] text-stone-400">
+                  <span>Home</span><span>/</span><span>Projects</span><span>/</span><span className="text-stone-700 font-medium">Dashboard</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="text" placeholder="Search files, commands..." readOnly className="flex-1 text-[11px] border border-stone-200 rounded-lg px-3 py-2 placeholder:text-stone-300" />
+                  <button className="text-[11px] bg-stone-900 text-white rounded-lg px-3 py-2 font-medium shrink-0">Search</button>
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {["All", "Documents", "Images", "Code", "Settings"].map((tab, i) => (
+                    <button key={tab} className={`text-[10px] px-2.5 py-1 rounded-md font-medium ${i === 0 ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-500"}`}>{tab}</button>
+                  ))}
+                </div>
+              </div>
+            </SkeletonSection>
           </div>
         </div>
       </div>

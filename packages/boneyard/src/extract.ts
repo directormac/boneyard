@@ -54,11 +54,14 @@ export function snapshotBones(el: Element, name: string = 'component', config?: 
     if (isLeaf) {
       const rect = node.getBoundingClientRect()
       if (rect.width < 1 || rect.height < 1) return
-      const br = isTableNode ? 0 : (parseBorderRadius(style, node) ?? 8)
+      // Squarish media elements (SVG icons, circular images) get 50% radius
+      const isSquarish = isMedia && rect.width > 0 && rect.height > 0 && Math.abs(rect.width - rect.height) < 4
+      const br = isTableNode ? 0 : isSquarish ? '50%' : (parseBorderRadius(style, node) ?? 8)
+      const rw = rootRect.width
       bones.push({
-        x: Math.round(rect.left - rootRect.left),
+        x: rw > 0 ? +((rect.left - rootRect.left) / rw * 100).toFixed(4) : 0,
         y: Math.round(rect.top - rootRect.top),
-        w: Math.round(rect.width),
+        w: rw > 0 ? +((rect.width) / rw * 100).toFixed(4) : 0,
         h: Math.round(rect.height),
         r: br,
       })
@@ -71,13 +74,14 @@ export function snapshotBones(el: Element, name: string = 'component', config?: 
       const rect = node.getBoundingClientRect()
       if (rect.width >= 1 && rect.height >= 1) {
         const br = isTableNode ? 0 : (parseBorderRadius(style, node) ?? 8)
+        const rw = rootRect.width
         bones.push({
-          x: Math.round(rect.left - rootRect.left),
+          x: rw > 0 ? +((rect.left - rootRect.left) / rw * 100).toFixed(4) : 0,
           y: Math.round(rect.top - rootRect.top),
-          w: Math.round(rect.width),
+          w: rw > 0 ? +((rect.width) / rw * 100).toFixed(4) : 0,
           h: Math.round(rect.height),
           r: br,
-          c: true, // container bone — rendered at reduced opacity
+          c: true,
         })
       }
     }

@@ -121,6 +121,7 @@ export function Skeleton({
 }: SkeletonProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
+  const [containerHeight, setContainerHeight] = useState(0)
   const [isDark, setIsDark] = useState(false)
 
   const isBuildMode = typeof window !== 'undefined' && (window as any).__BONEYARD_BUILD === true
@@ -154,10 +155,14 @@ export function Skeleton({
     const el = containerRef.current
     if (!el) return
     const ro = new ResizeObserver(entries => {
-      setContainerWidth(Math.round(entries[0]?.contentRect.width ?? 0))
+      const rect = entries[0]?.contentRect
+      setContainerWidth(Math.round(rect?.width ?? 0))
+      if (rect && rect.height > 0) setContainerHeight(Math.round(rect.height))
     })
     ro.observe(el)
-    setContainerWidth(Math.round(el.getBoundingClientRect().width))
+    const rect = el.getBoundingClientRect()
+    setContainerWidth(Math.round(rect.width))
+    if (rect.height > 0) setContainerHeight(Math.round(rect.height))
     return () => ro.disconnect()
   }, [])
 
@@ -180,7 +185,7 @@ export function Skeleton({
   }
 
   // Resolve bones: explicit initialBones > registry lookup
-  // Use viewport width (not container width) to pick breakpoint, since bones are keyed by viewport width
+  // Use viewport width to pick breakpoint since bones are keyed by viewport width
   const effectiveBones = initialBones ?? (name ? bonesRegistry.get(name) : undefined)
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : containerWidth
   const activeBones = effectiveBones && containerWidth > 0
@@ -190,6 +195,11 @@ export function Skeleton({
   const showSkeleton = loading && activeBones
   const showFallback = loading && !activeBones
 
+  // Scale vertical positions to match actual container height
+  const effectiveHeight = containerHeight > 0 ? containerHeight : activeBones?.height ?? 0
+  const capturedHeight = activeBones?.height ?? 0
+  const scaleY = (effectiveHeight > 0 && capturedHeight > 0) ? effectiveHeight / capturedHeight : 1
+
   return (
     <div ref={containerRef} className={className} style={{ position: 'relative' }} {...dataAttrs}>
       <div style={showSkeleton ? { visibility: 'hidden' } : undefined}>
@@ -197,17 +207,17 @@ export function Skeleton({
       </div>
 
       {showSkeleton && (
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <div style={{ position: 'relative', width: '100%', height: activeBones.height }}>
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             {activeBones.bones.map((b: Bone, i: number) => (
               <div
                 key={i}
                 style={{
                   position: 'absolute',
-                  left: b.x,
-                  top: b.y,
-                  width: b.w,
-                  height: b.h,
+                  left: `${b.x}%`,
+                  top: b.y * scaleY,
+                  width: `${b.w}%`,
+                  height: b.h * scaleY,
                   borderRadius: typeof b.r === 'string' ? b.r : `${b.r}px`,
                   backgroundColor: b.c ? adjustColor(resolvedColor, isDark ? 0.03 : 0.45) : resolvedColor,
                   animation: animate ? 'boneyard-pulse 1.8s ease-in-out infinite' : undefined,
