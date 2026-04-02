@@ -1,4 +1,4 @@
 {
-  "installCommand": "npm i -g pnpm@9.15.4 && pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm --filter boneyard-js build && pnpm --filter boneyard-docs build"
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "cd packages/boneyard && npx tsc && cd ../../apps/docs && npx next build"
 }

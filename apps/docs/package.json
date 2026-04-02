@@ -10,7 +10,7 @@
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",
     "@tailwindcss/postcss": "^4.2.2",
-    "boneyard-js": "workspace:*",
+    "boneyard-js": "file:../../packages/boneyard",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lottie-react": "^2.4.1",

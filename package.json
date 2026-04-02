@@ -8,8 +8,12 @@
     ]
   },
   "version": "",
-  "packageManager": "pnpm@9.15.4",
-  "engines": {
-    "node": ">=20"
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "build": "cd packages/boneyard && npx tsc && cd ../../apps/docs && npx next build"
   }
 }
