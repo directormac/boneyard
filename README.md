@@ -71,8 +71,10 @@ npx boneyard-js build --breakpoints 390,820,1440 --out ./public/bones
 
 ## Links
 
+- [Website](https://boneyard-js.vercel.app)
 - [npm](https://www.npmjs.com/package/boneyard-js)
-- [Documentation](https://github.com/0xGF/boneyard)
+- [Twitter thread](https://x.com/0xGoodfuture/status/2039818750568878245)
+- [GitHub](https://github.com/0xGF/boneyard)
 
 ## License
 

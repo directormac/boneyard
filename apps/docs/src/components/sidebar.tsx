@@ -21,6 +21,7 @@ const exampleItems = [
   { href: "/demo", label: "Complex Example" },
   { href: "/try-it", label: "Examples" },
   { href: "/how-it-works", label: "How it works" },
+  { href: "/ssr", label: "SSR" },
   { href: "/agent", label: "Agent" },
 ];
 
@@ -106,7 +107,7 @@ export function Sidebar() {
           </a>
         </div>
         <a
-          href="https://twitter.com/0xGF"
+          href="https://x.com/0xGoodfuture"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 group"
