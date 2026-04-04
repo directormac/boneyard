@@ -94,12 +94,15 @@ if (!cliSetWait && typeof config.wait === 'number') {
 // Resolve env vars in auth config
 if (config.resolveEnvVars && config.auth) {
   if (config.auth.cookies) {
+    console.log(`  \x1b[2mLoading ${config.auth.cookies.length} cookie(s) from config\x1b[0m`)
     config.auth.cookies = config.auth.cookies.map(c => ({
       ...c,
       value: resolveConfigValue(c.value)
     }))
   }
   if (config.auth.headers) {
+    const headerCount = Object.keys(config.auth.headers).length
+    console.log(`  \x1b[2mLoading ${headerCount} header(s) from config\x1b[0m`)
     for (const [key, val] of Object.entries(config.auth.headers)) {
       config.auth.headers[key] = resolveConfigValue(val)
     }
@@ -304,9 +307,12 @@ const page = await browser.newPage()
 // Apply auth if configured
 if (config.auth) {
   if (config.auth.cookies?.length) {
+    console.log(`  \x1b[2mApplying ${config.auth.cookies.length} cookie(s) to browser session\x1b[0m`)
     await page.context().addCookies(config.auth.cookies)
   }
   if (config.auth.headers) {
+    const headerCount = Object.keys(config.auth.headers).length
+    console.log(`  \x1b[2mApplying ${headerCount} header(s) to browser session\x1b[0m`)
     await page.setExtraHTTPHeaders(config.auth.headers)
   }
 }
@@ -685,7 +691,7 @@ function printHelp() {
       "resolveEnvVars": true,
       "auth": {
         "cookies": [{ "name": "session", "value": "env[SESSION_TOKEN]" }],
-        "headers": { "Authorization": "Bearer env[TOKEN]" }
+        "headers": { "Authorization": "env[TOKEN]" }
       }
     }
 
