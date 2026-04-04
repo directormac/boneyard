@@ -315,6 +315,8 @@ function hashContent(html) {
 
 // ── gotoPage logic ────────────────────────────────────────────────────────────────
 
+  
+
 async function gotoPage(page, pageUrl) {
   try {
     await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 15_000 })
@@ -652,6 +654,18 @@ function printHelp() {
     }
 
     CLI flags override config file values.
+
+  Authentication (for pages requiring login):
+    {
+      "resolveEnvVars": true,
+      "auth": {
+        "cookies": [{ "name": "session", "value": "env[SESSION_TOKEN]" }],
+        "headers": { "Authorization": "Bearer env[TOKEN]" }
+      }
+    }
+
+    Use env[VAR_NAME] syntax to reference environment variables.
+    Set resolveEnvVars: true to enable env var resolution.
 
   Examples:
     npx boneyard-js build
