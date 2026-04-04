@@ -15,6 +15,7 @@ const navItems = [
   { href: "/install", label: "Install" },
   { href: "/features", label: "Features" },
   { href: "/output", label: "Output" },
+  { href: "/react-native", label: "React Native" },
 ];
 
 const exampleItems = [

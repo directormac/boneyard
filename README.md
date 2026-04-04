@@ -37,6 +37,21 @@ import './bones/registry'
 
 Done. Every `<Skeleton name="...">` shows a pixel-perfect skeleton on load.
 
+## React Native
+
+Works in Expo and bare React Native apps. Same bones format, different renderer.
+
+```tsx
+import { Skeleton } from 'boneyard-js/native'
+import cardBones from './bones/card.bones.json'
+
+<Skeleton loading={isLoading} initialBones={cardBones}>
+  <ProfileCard />
+</Skeleton>
+```
+
+Generate bones from your web build or write them by hand. See the [React Native docs](https://boneyard.vercel.app/react-native) for full setup.
+
 ## Install
 
 ```bash
