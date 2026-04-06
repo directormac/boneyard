@@ -171,12 +171,51 @@ import { registerBones } from 'boneyard-js/react'
 registerBones({ 'my-card': bonesJson })
 \`\`\`
 
-## Authentication & Playwright access
+## Authentication & protected routes
 
-If your app requires authentication:
-- Use the \`fixture\` prop to provide mock data that renders without auth
-- Or set up a dev/preview mode that bypasses auth for the build step
-- The CLI runs Playwright in headless mode — it won't have access to your browser sessions or cookies
+**Web (React/Svelte):** Configure auth in \`boneyard.config.json\`:
+\`\`\`json
+{
+  "auth": {
+    "cookies": [{ "name": "session", "value": "env[SESSION_TOKEN]", "domain": "localhost" }],
+    "headers": { "Authorization": "Bearer env[API_TOKEN]" }
+  },
+  "resolveEnvVars": true
+}
+\`\`\`
+Or use the \`fixture\` prop to provide mock content that renders without auth.
+
+**React Native:** Auth is a non-issue with \`--native\`. The app is already running on device with the user logged in — just open the screen you want to scan.
+
+## React Native
+
+\`\`\`tsx
+import { Skeleton } from 'boneyard-js/native'
+
+<Skeleton name="profile" loading={isLoading}>
+  <ProfileCard />
+</Skeleton>
+\`\`\`
+
+Generate bones: \`npx boneyard-js build --native --out ./bones\`, then open your app on device. The Skeleton component auto-scans in dev mode — walks the React fiber tree, measures each view via UIManager, and sends bone data to the CLI. In production, scan code is completely inactive.
+
+After generating, add \`import './bones/registry'\` and reload the app.
+
+## Svelte
+
+\`\`\`svelte
+<script>
+  import Skeleton from 'boneyard-js/svelte'
+  import '../bones/registry'
+  let loading = true
+</script>
+
+<Skeleton name="card" {loading}>
+  <Card />
+</Skeleton>
+\`\`\`
+
+Uses Svelte 5 snippets for \`fallback\` and \`fixture\`. Same CLI: \`npx boneyard-js build\`.
 
 ## Known limitations
 
@@ -215,6 +254,8 @@ Runtime defaults (\`color\`, \`darkColor\`, \`animate\`) are automatically inclu
 
 - \`boneyard-js\` — snapshotBones, renderBones, fromElement
 - \`boneyard-js/react\` — Skeleton, registerBones, configureBoneyard
+- \`boneyard-js/native\` — Skeleton, registerBones, configureBoneyard (React Native)
+- \`boneyard-js/svelte\` — Skeleton component, registerBones
 `;
 
 export default function AgentPage() {

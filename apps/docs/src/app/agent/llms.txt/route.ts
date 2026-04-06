@@ -166,6 +166,7 @@ npx boneyard-js build [url] [options]
   --breakpoints <bp>   Viewport widths, comma-separated (auto-detects Tailwind)
   --wait <ms>          Extra wait after page load (default: 800)
   --force              Recapture all (skip incremental cache)
+  --native             React Native mode — scans from device (no browser)
 \`\`\`
 
 ## Bone format
@@ -211,10 +212,50 @@ Create \`boneyard.config.json\` in your project root. Controls both the CLI buil
 
 Runtime defaults (\`color\`, \`darkColor\`, \`animate\`) are automatically included in the generated \`registry.js\`. Per-component props and CLI flags override config values. \`animate\` accepts \`"pulse"\`, \`"shimmer"\`, or \`"solid"\`.
 
+## React Native
+
+\`\`\`tsx
+import { Skeleton } from 'boneyard-js/native'
+
+<Skeleton name="profile" loading={isLoading}>
+  <ProfileCard />
+</Skeleton>
+\`\`\`
+
+Generate bones: \`npx boneyard-js build --native --out ./bones\`, then open your app on device. The Skeleton component auto-scans in dev mode via fiber tree + UIManager. In production, scan code is inactive.
+
+Auth is a non-issue — the app is already running with the user logged in.
+
+## Svelte
+
+\`\`\`svelte
+<script>
+  import Skeleton from 'boneyard-js/svelte'
+  import '../bones/registry'
+  let loading = true
+</script>
+
+<Skeleton name="card" {loading}>
+  <Card />
+</Skeleton>
+\`\`\`
+
+Uses Svelte 5 snippets for \`fallback\` and \`fixture\`. Same CLI: \`npx boneyard-js build\`.
+
+## Authentication
+
+**Web:** Configure in \`boneyard.config.json\`:
+\`\`\`json
+{ "auth": { "cookies": [...], "headers": {...} }, "resolveEnvVars": true }
+\`\`\`
+**React Native:** Not needed — device handles auth natively.
+
 ## Package exports
 
 - \`boneyard-js\` — snapshotBones, renderBones, fromElement
 - \`boneyard-js/react\` — Skeleton, registerBones, configureBoneyard
+- \`boneyard-js/native\` — Skeleton, registerBones, configureBoneyard (React Native)
+- \`boneyard-js/svelte\` — Skeleton component, registerBones
 `;
 
 export async function GET() {
