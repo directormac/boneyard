@@ -4,20 +4,23 @@
 
 # boneyard
 
-Pixel-perfect skeleton loading screens, extracted from your real DOM. No manual measurement, no hand-tuned placeholders.
+Pixel-perfect skeleton loading screens, extracted from your real UI. No manual measurement, no hand-tuned placeholders.
 
-## How it works
+Works with **React**, **Svelte 5**, and **React Native**.
 
-1. Wrap your component with `<Skeleton>` and give it a name
-2. Run `npx boneyard-js build` — it snapshots the DOM and generates bones
-3. Import the registry once — every skeleton auto-resolves
+## Quick start
+
+```bash
+npm install boneyard-js
+```
+
+### React
 
 ```tsx
 import { Skeleton } from 'boneyard-js/react'
 
 function BlogPage() {
   const { data, isLoading } = useFetch('/api/post')
-
   return (
     <Skeleton name="blog-card" loading={isLoading}>
       {data && <BlogCard data={data} />}
@@ -31,138 +34,109 @@ npx boneyard-js build
 ```
 
 ```ts
-// app/layout.tsx — add once
+// Add once in your app entry
 import './bones/registry'
-```
-
-Done. Every `<Skeleton name="...">` shows a pixel-perfect skeleton on load.
-
-## React Native
-
-Works in Expo and bare React Native apps. Same bones format, different renderer.
-
-```tsx
-import { Skeleton } from 'boneyard-js/native'
-import cardBones from './bones/card.bones.json'
-
-<Skeleton loading={isLoading} initialBones={cardBones}>
-  <ProfileCard />
-</Skeleton>
-```
-
-Generate bones from your web build or write them by hand. See the [React Native docs](https://boneyard.vercel.app/react-native) for full setup.
-
-## Install
-
-```bash
-npm install boneyard-js
-```
-
-## Framework adapters
-
-### React
-
-```tsx
-import { Skeleton } from 'boneyard-js/react'
 ```
 
 ### Svelte 5
 
 ```svelte
-<script lang="ts">
+<script>
   import Skeleton from 'boneyard-js/svelte'
-  import ProfileCard from './ProfileCard.svelte'
+  import '../bones/registry'
+  let loading = true
 </script>
 
-<Skeleton name="profile-card" loading={isLoading}>
-  {#snippet fallback()}
-    <p>Loading profile...</p>
-  {/snippet}
+<Skeleton name="card" {loading}>
+  <Card />
+</Skeleton>
+```
 
+```bash
+npx boneyard-js build
+```
+
+### React Native
+
+```tsx
+import { Skeleton } from 'boneyard-js/native'
+
+<Skeleton name="profile-card" loading={isLoading}>
   <ProfileCard />
 </Skeleton>
 ```
 
-Import the generated registry once in your app entry:
-
-```svelte
-<script lang="ts">
-  import '$lib/bones/registry.js'
-</script>
+```bash
+npx boneyard-js build --native --out ./bones
+# Open your app on device — bones capture automatically
 ```
-
-## What it does
-
-- Reads `getBoundingClientRect()` on every visible element in your component
-- Stores positions as a flat array of `{ x, y, w, h, r }` bones
-- Renders them as gray rectangles that match your real layout exactly
-- Responsive — captures at multiple breakpoints (375px, 768px, 1280px by default)
-- Pulse animation shimmers to a lighter shade of whatever color you set
-
-## Layout API
-
-If you work with hand-authored or extracted descriptors, you can use the layout engine in two ways.
-
-### Default path
 
 ```ts
-import { computeLayout } from "boneyard-js";
-
-const result = computeLayout(descriptor, 375);
+// Add once in your app entry, then reload
+import './bones/registry'
 ```
 
-This is the simple, backward-compatible path. The first call compiles the descriptor tree. Later calls with the same descriptor object reuse that compiled state automatically.
+No browser needed. The `--native` flag scans the actual native layout on your device via the React fiber tree.
 
-### Explicit compiled path
+## How it works
 
-```ts
-import { compileDescriptor, computeLayout } from "boneyard-js";
+**Web (React / Svelte):** The CLI opens a headless browser, visits your app, finds every `<Skeleton name="...">`, and snapshots their layout at multiple breakpoints.
 
-const compiled = compileDescriptor(descriptor);
+**React Native:** The `<Skeleton>` component auto-scans in dev mode when the CLI is running. It walks the fiber tree, measures views via `UIManager`, and sends bone data to the CLI. Zero overhead in production.
 
-const mobile = computeLayout(compiled, 375);
-const desktop = computeLayout(compiled, 1280);
+Both output the same `.bones.json` format — cross-platform compatible.
+
+## CLI
+
+```bash
+npx boneyard-js build                              # auto-detect dev server
+npx boneyard-js build http://localhost:3000         # explicit URL
+npx boneyard-js build --native --out ./bones        # React Native
+npx boneyard-js build --breakpoints 390,820,1440    # custom breakpoints
+npx boneyard-js build --force                       # skip incremental cache
 ```
-
-Use this when you know you will reuse the same descriptor many times and want to move the cold work up front.
-
-Examples:
-
-- SSR code rendering several breakpoints
-- descriptor registries loaded once at startup
-- responsive tools or animation loops that relayout often
-- benchmarks where you want to separate cold compile cost from hot relayout cost
-
-If you already use `computeLayout(descriptor, width)`, you do not need to change your code. `compileDescriptor()` is an optimization API, not a migration requirement.
-
-If you mutate the same descriptor object in place later, boneyard will detect that change and rebuild its compiled state automatically on the next layout call. You can also call `invalidateDescriptor(descriptor)` to force a rebuild immediately.
 
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `name` | string | required | Unique name for this skeleton |
-| `loading` | boolean | required | Show skeleton or real content |
-| `color` | string | `#e0e0e0` | Bone fill color |
-| `animate` | boolean | `true` | Pulse animation |
-| `snapshotConfig` | object | — | Control which elements are included |
+| `loading` | boolean | — | Show skeleton or real content |
+| `name` | string | — | Unique name (generates `name.bones.json`) |
+| `color` | string | `rgba(0,0,0,0.08)` | Bone fill color |
+| `darkColor` | string | `rgba(255,255,255,0.06)` | Bone color in dark mode |
+| `animate` | `'pulse'` \| `'shimmer'` \| `'solid'` | `'pulse'` | Animation style |
+| `fixture` | ReactNode / Snippet | — | Mock content for CLI capture (dev only) |
+| `initialBones` | ResponsiveBones | — | Pass bones directly (overrides registry) |
+| `fallback` | ReactNode / Snippet | — | Shown when loading but no bones available |
 
-## CLI
+## Config file
 
-```bash
-npx boneyard-js build                    # auto-detect dev server
-npx boneyard-js build http://localhost:3000
-npx boneyard-js build --breakpoints 390,820,1440 --out ./public/bones
+```json
+{
+  "breakpoints": [375, 768, 1280],
+  "out": "./src/bones",
+  "wait": 800,
+  "color": "#e5e5e5",
+  "animate": "pulse"
+}
 ```
 
-The generated `registry.js` is framework-neutral and imports `registerBones` from `boneyard-js`.
+Save as `boneyard.config.json`. Per-component props override config values.
+
+## Package exports
+
+| Import | Use |
+|--------|-----|
+| `boneyard-js` | `snapshotBones`, `renderBones`, `computeLayout` |
+| `boneyard-js/react` | React `<Skeleton>` |
+| `boneyard-js/native` | React Native `<Skeleton>` |
+| `boneyard-js/svelte` | Svelte `<Skeleton>` |
 
 ## Links
 
-- [Website](https://boneyard.vercel.app/overview)
+- [Docs](https://boneyard.vercel.app/overview)
 - [npm](https://www.npmjs.com/package/boneyard-js)
-- [Twitter thread](https://x.com/0xGoodfuture/status/2039818750568878245)
-- [GitHub](https://github.com/0xGF/boneyard)
+- [Twitter](https://x.com/0xGoodfuture/status/2039818750568878245)
 
 ## Star History
 
