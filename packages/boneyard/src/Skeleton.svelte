@@ -3,7 +3,6 @@
 </script>
 
 <script lang="ts">
-  import { onMount } from 'svelte'
   import type { Snippet } from 'svelte'
   import type { ResponsiveBones, SkeletonResult, SnapshotConfig } from './types.js'
   import {
@@ -46,7 +45,6 @@
     snapshotConfig,
   }: SkeletonProps = $props()
 
-  let containerRef = $state<HTMLDivElement | null>(null)
   let containerWidth = $state(0)
   let containerHeight = $state(0)
   let isDark = $state(false)
@@ -73,19 +71,6 @@
   )
   let pulseColor = $derived(adjustColor(resolvedColor, isDark ? 0.04 : 0.3))
 
-  function updateMeasurements() {
-    if (!containerRef) return
-    const rect = containerRef.getBoundingClientRect()
-    containerWidth = Math.round(rect.width)
-    if (rect.height > 0) containerHeight = Math.round(rect.height)
-  }
-
-  function updateDarkMode() {
-    if (typeof window === 'undefined') return
-    const hasDarkClass = document.documentElement.classList.contains('dark') || !!containerRef?.closest('.dark')
-    isDark = hasDarkClass
-  }
-
   function getBoneStyle(
     bone: SkeletonResult['bones'][number],
     scale: number,
@@ -99,41 +84,45 @@
     return `position:absolute;left:${bone.x}%;top:${bone.y * scale}px;width:${bone.w}%;height:${bone.h * scale}px;border-radius:${radius};background-color:${boneColor};${animation}`
   }
 
-  onMount(() => {
-    updateDarkMode()
-    updateMeasurements()
-
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const mqHandler = () => updateDarkMode()
-    mq.addEventListener('change', mqHandler)
-
-    const mutationObserver = new MutationObserver(updateDarkMode)
-    mutationObserver.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    })
-
-    const resizeObserver = new ResizeObserver(entries => {
+  function resizeAttachment(element: HTMLDivElement): void | (() => void) {
+    const observer = new ResizeObserver(entries => {
       const rect = entries[0]?.contentRect
       containerWidth = Math.round(rect?.width ?? 0)
       if (rect && rect.height > 0) containerHeight = Math.round(rect.height)
     })
 
-    if (containerRef) {
-      resizeObserver.observe(containerRef)
+    observer.observe(element)
+
+    return () => observer.disconnect()
+  }
+
+  function darkModeAttachment(element: HTMLDivElement): void | (() => void) {
+    const updateDark = () => {
+      const hasDarkClass = document.documentElement.classList.contains('dark') || !!element.closest('.dark')
+      isDark = hasDarkClass
     }
+
+    updateDark()
+
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const mqHandler = () => updateDark()
+    mq.addEventListener('change', mqHandler)
+
+    const mutationObserver = new MutationObserver(updateDark)
+    mutationObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
 
     return () => {
       mq.removeEventListener('change', mqHandler)
       mutationObserver.disconnect()
-      resizeObserver.disconnect()
     }
-  })
+  }
 </script>
 
 {#if buildMode}
   <div
-    bind:this={containerRef}
     class={resolvedClassName}
     style="position:relative;"
     data-boneyard={name}
@@ -149,11 +138,12 @@
   </div>
 {:else}
   <div
-    bind:this={containerRef}
     class={resolvedClassName}
     style="position:relative;"
     data-boneyard={name}
     data-boneyard-config={serializedSnapshotConfig}
+    {@attach resizeAttachment}
+    {@attach darkModeAttachment}
   >
     <div data-boneyard-content="true" style:visibility={showSkeleton ? 'hidden' : undefined}>
       {#if showFallback}
