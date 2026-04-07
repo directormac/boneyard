@@ -55,6 +55,12 @@ export default function FeaturesPage() {
             <p className="text-[13px] font-medium text-stone-500 mb-2">4. Import the registry</p>
             <CodeBlock language="tsx" code={`<span class="text-stone-500">// Add once in your app entry (e.g. layout.tsx, _app.tsx, main.tsx)</span>
 <span class="text-[#c084fc]">import</span> <span class="text-[#86efac]">'./bones/registry'</span>`} />
+            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-[13px] text-amber-700">
+                <strong className="text-amber-800">This import is required.</strong> Without it, skeletons won&apos;t render — the Skeleton component
+                needs the registry to resolve bone data by name. Import it once at the top level of your app.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -276,6 +282,11 @@ export default function FeaturesPage() {
                 <td className="px-4 py-2">—</td>
                 <td className="px-4 py-2">Skip incremental cache, recapture all</td>
               </tr>
+              <tr className="border-b border-stone-100">
+                <td className="px-4 py-2 font-mono text-stone-800">--watch</td>
+                <td className="px-4 py-2">—</td>
+                <td className="px-4 py-2">Re-capture when your app changes (listens for HMR)</td>
+              </tr>
               <tr>
                 <td className="px-4 py-2 font-mono text-stone-800">--native</td>
                 <td className="px-4 py-2">—</td>
@@ -297,7 +308,10 @@ npx boneyard-js build http://localhost:3000/dashboard
 npx boneyard-js build --breakpoints 390,820,1440 --out ./public/bones
 
 <span class="text-stone-500"># Force recapture all (skip incremental cache)</span>
-npx boneyard-js build --force`} />
+npx boneyard-js build --force
+
+<span class="text-stone-500"># Watch mode — re-captures when your app changes</span>
+npx boneyard-js build --watch`} />
         </div>
 
         <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4 space-y-2">

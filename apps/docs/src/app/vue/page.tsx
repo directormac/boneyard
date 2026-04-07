@@ -47,6 +47,12 @@ export default function VuePage() {
             <p className="text-[13px] font-medium text-stone-500 mb-2">4. Import the registry</p>
             <CodeBlock language="ts" code={`<span class="text-stone-500">// Add once in your app entry (e.g. main.ts)</span>
 <span class="text-[#c084fc]">import</span> <span class="text-[#86efac]">'./bones/registry'</span>`} />
+            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-[13px] text-amber-700">
+                <strong className="text-amber-800">This import is required.</strong> Without it, skeletons won&apos;t render — the Skeleton component
+                needs the registry to resolve bone data by name.
+              </p>
+            </div>
           </div>
         </div>
       </section>

@@ -58,9 +58,12 @@ export default function ReactNativePage() {
             <p className="text-[13px] font-medium text-stone-500 mb-2">4. Import the registry and reload</p>
             <CodeBlock language="tsx" code={`<span class="text-stone-500">// Add once in your app entry (e.g. App.tsx)</span>
 <span class="text-[#c084fc]">import</span> <span class="text-[#86efac]">'./bones/registry'</span>`} />
-            <p className="text-[13px] text-stone-400 mt-2">
-              Reload your app after adding the import — the skeletons will render on the next launch.
-            </p>
+            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-[13px] text-amber-700">
+                <strong className="text-amber-800">This import is required.</strong> Without it, skeletons won&apos;t render.
+                Reload your app after adding it — the skeletons will render on the next launch.
+              </p>
+            </div>
           </div>
         </div>
       </section>

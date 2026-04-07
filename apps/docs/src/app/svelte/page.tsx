@@ -34,7 +34,7 @@ export default function SveltePage() {
               <p className="text-[13px] font-medium text-stone-500 mb-2">2. Wrap your components</p>
               <CodeBlock filename="src/routes/+page.svelte" language="svelte" code={`<span class="text-[#c084fc]">&lt;script&gt;</span>
   <span class="text-[#c084fc]">import</span> Skeleton <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard-js/svelte'</span>
-  <span class="text-[#c084fc]">import</span> <span class="text-[#86efac]">'../bones/registry'</span>
+  <span class="text-[#c084fc]">import</span> <span class="text-[#86efac]">'$lib/bones/registry'</span>
 
   <span class="text-[#c084fc]">let</span> loading = <span class="text-[#fbbf24]">true</span>
 <span class="text-[#c084fc]">&lt;/script&gt;</span>
@@ -52,8 +52,14 @@ export default function SveltePage() {
             </div>
             <div>
               <p className="text-[13px] font-medium text-stone-500 mb-2">4. Import the registry</p>
-              <CodeBlock language="js" code={`<span class="text-stone-500">// Add once in your layout or entry</span>
-<span class="text-[#c084fc]">import</span> <span class="text-[#86efac]">'./bones/registry'</span>`} />
+              <CodeBlock language="js" code={`<span class="text-stone-500">// Add once in your +layout.svelte or +page.svelte</span>
+<span class="text-[#c084fc]">import</span> <span class="text-[#86efac]">'$lib/bones/registry'</span>`} />
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="text-[13px] text-amber-700">
+                  <strong className="text-amber-800">This import is required.</strong> Without it, skeletons won&apos;t render — the Skeleton component
+                  needs the registry to resolve bone data by name.
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -125,9 +131,9 @@ export default function SveltePage() {
                 </tr>
                 <tr className="border-b border-stone-100">
                   <td className="px-4 py-2 font-mono text-stone-800">animate</td>
-                  <td className="px-4 py-2">boolean</td>
-                  <td className="px-4 py-2">true</td>
-                  <td className="px-4 py-2">Enable pulse animation</td>
+                  <td className="px-4 py-2">{`'pulse' | 'shimmer' | 'solid'`}</td>
+                  <td className="px-4 py-2">pulse</td>
+                  <td className="px-4 py-2">Animation style (also accepts true/false)</td>
                 </tr>
                 <tr className="border-b border-stone-100">
                   <td className="px-4 py-2 font-mono text-stone-800">class</td>

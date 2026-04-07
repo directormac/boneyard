@@ -150,6 +150,8 @@ npx boneyard-js build [url] [options]
   --breakpoints <bp>   Viewport widths, comma-separated (auto-detects Tailwind)
   --wait <ms>          Extra wait after page load (default: 800)
   --force              Recapture all (skip incremental cache)
+  --watch              Re-capture when your app changes (listens for HMR)
+  --native             React Native mode — scans from device (no browser)
 \`\`\`
 
 ## Bone format
@@ -256,6 +258,7 @@ Runtime defaults (\`color\`, \`darkColor\`, \`animate\`) are automatically inclu
 - \`boneyard-js/react\` — Skeleton, registerBones, configureBoneyard
 - \`boneyard-js/native\` — Skeleton, registerBones, configureBoneyard (React Native)
 - \`boneyard-js/svelte\` — Skeleton component, registerBones
+- \`boneyard-js/vue\` — Skeleton component, registerBones, configureBoneyard
 `;
 
 export default function AgentPage() {
